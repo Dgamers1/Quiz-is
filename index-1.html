@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <title>Quiz Battle — Inglês vs Português</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1020;--panel:#151e32;--panel2:#1d2942;--line:#2b3a59;--text:#f5f7ff;--muted:#aab6d0;--blue:#65a8ff;--purple:#a78bfa;--green:#42d392;--red:#ff7185}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#1b2a49 0,#0b1020 55%);font-family:Inter,system-ui,Arial,sans-serif;color:var(--text);min-height:100vh}
+    .wrap{width:min(760px,100%);margin:auto;padding:22px 16px 42px}.brand{text-align:center;margin:10px 0 24px}.brand .logo{font-size:42px}.brand h1{font-size:clamp(25px,6vw,38px);margin:5px 0}.brand p{color:var(--muted);margin:0}
+    .card{background:rgba(21,30,50,.94);border:1px solid var(--line);border-radius:20px;padding:20px;margin:14px 0;box-shadow:0 16px 40px #0003}
+    h2{margin:0 0 14px;font-size:21px}label{display:block;color:var(--muted);font-size:13px;margin:12px 0 6px}
+    input{width:100%;padding:14px;border:1px solid var(--line);border-radius:12px;background:#0d1527;color:white;font-size:16px;outline:none}input:focus{border-color:var(--blue)}
+    button{border:0;border-radius:12px;padding:13px 16px;font-weight:750;font-size:15px;cursor:pointer;color:#07111f;background:linear-gradient(135deg,#78bcff,#a78bfa);width:100%;margin-top:12px}
+    button.secondary{background:var(--panel2);border:1px solid var(--line);color:var(--text)}button:disabled{opacity:.45;cursor:not-allowed}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.hidden{display:none!important}.muted{color:var(--muted)}.small{font-size:13px}.pill{display:inline-block;padding:6px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px}
+    .players{display:grid;grid-template-columns:1fr 1fr;gap:10px}.player{background:#0e172a;border:1px solid var(--line);padding:13px;border-radius:14px}.player strong{display:block;overflow-wrap:anywhere}.score{font-size:25px;font-weight:850;color:var(--green)}
+    .question{font-size:21px;line-height:1.4;margin:16px 0}.answers{display:grid;gap:10px}.answers button{margin:0;text-align:left;background:#202d48;color:white;border:1px solid #354667}.answers button:hover:not(:disabled){border-color:var(--blue);background:#293b5e}.answers button.selected{border-color:var(--blue);background:#263d66}.answers button.correct{border-color:var(--green);background:#123d35}.answers button.wrong{border-color:var(--red);background:#482431}
+    .bar{height:8px;background:#26334e;border-radius:20px;overflow:hidden;margin:12px 0}.bar span{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--purple));width:0;transition:width .3s}
+    .timer-bar{height:10px;background:#26334e;border-radius:20px;overflow:hidden;margin:8px 0 14px}.timer-bar span{display:block;height:100%;background:linear-gradient(90deg,#42d392,#ffd166);width:100%;transition:width 1s linear}
+    .timer-bar.urgent span{background:linear-gradient(90deg,#ff7185,#ff9cab)}
+    .timer-text{font-size:18px;font-weight:800;text-align:center;margin:4px 0 8px;letter-spacing:1px}
+    .notice{padding:12px;border-radius:12px;background:#0d1729;border:1px solid var(--line);color:var(--muted);margin-top:12px}.error{color:#ff9cab}.success{color:#7ee6b5}.center{text-align:center}.code{font-size:28px;letter-spacing:6px;font-weight:900;color:#9fc9ff}
+    .status-ok{color:#7ee6b5}.status-wait{color:#ffd166}
+    footer{text-align:center;color:#73809b;font-size:12px;margin-top:22px}
+    @media(max-width:520px){.card{padding:16px}.row{grid-template-columns:1fr}.question{font-size:19px}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header class="brand"><div class="logo">⚔️</div><h1>Quiz Battle</h1><p>Inglês vs Português · Duelo de conhecimento</p></header>
+
+  <section id="setup" class="card">
+    <h2>Entre na batalha</h2>
+    <label for="playerName">Seu nome</label><input id="playerName" maxlength="18" placeholder="Ex.: Dgamer">
+    <div class="row">
+      <button id="createBtn">＋ Criar sala</button>
+      <button id="showJoinBtn" class="secondary">Entrar com código</button>
+    </div>
+    <div id="joinArea" class="hidden">
+      <label for="roomCode">Código da sala</label><input id="roomCode" maxlength="6" placeholder="ABC123" autocapitalize="characters">
+      <button id="joinBtn">Entrar na sala</button>
+    </div>
+    <div id="setupMsg" class="notice small">Crie uma sala e envie o código ao seu amigo. Os dois precisam estar conectados à internet.</div>
+  </section>
+
+  <section id="lobby" class="card hidden">
+    <div class="center"><span class="pill">SALA PRIVADA</span><p class="muted small">Compartilhe este código com seu amigo:</p><div id="roomCodeDisplay" class="code">------</div><button id="copyBtn" class="secondary">Copiar código</button></div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
+    <h2>Jogadores</h2><div id="lobbyPlayers" class="players"></div>
+    <p id="lobbyStatus" class="notice">Esperando o segundo jogador...</p>
+    <button id="startBtn" class="hidden">Começar partida</button>
+    <button id="leaveBtn" class="secondary">Sair da sala</button>
+  </section>
+
+  <section id="game" class="card hidden">
+    <div class="row"><span id="roundLabel" class="pill">Questão 1/100</span><span id="categoryLabel" class="pill">INGLÊS</span></div>
+    <div class="timer-text" id="timerText">03:00</div>
+    <div class="timer-bar"><span id="timerBar"></span></div>
+    <div class="bar"><span id="progress"></span></div>
+    <div id="questionText" class="question"></div>
+    <div id="answerButtons" class="answers"></div>
+    <div id="answerStatus" class="notice">Escolha sua resposta.</div>
+    <h2 style="margin-top:22px">Placar</h2><div id="gamePlayers" class="players"></div>
+  </section>
+
+  <section id="result" class="card hidden center">
+    <div style="font-size:48px">🏆</div><h2>Fim de jogo!</h2><div id="winnerText" class="question"></div><div id="finalPlayers" class="players"></div>
+    <button id="backBtn">Voltar ao início</button>
+  </section>
+  <footer>Quiz Battle · Feito para jogar com amigos · 100 questões · 3 min por questão</footer>
+</div>
+
+<!-- Firebase: use o SDK compat para manter o projeto em um único HTML. -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+/*
+  Firebase já configurado com as chaves do projeto.
+  Se for publicar em lugar público, troque por placeholders depois.
+*/
+const firebaseConfig = {
+  apiKey: "AIzaSyBZf92G1UBzyRx2wJ9UNwEMHOQ6sftr7aU",
+  authDomain: "quiz-battle-ff792.firebaseapp.com",
+  databaseURL: "https://quiz-battle-ff792-default-rtdb.firebaseio.com",
+  projectId: "quiz-battle-ff792",
+  storageBucket: "quiz-battle-ff792.firebasestorage.app",
+  messagingSenderId: "884165024342",
+  appId: "1:884165024342:web:15905622abe8333c76b9f7"
+};
+
+const QUESTION_TIME = 180; // 3 minutos em segundos
+
+const QUESTIONS = [
+  // ===== TAG QUESTIONS (INGLÊS) =====
+  {c:"INGLÊS",q:"She is your sister, _____?",a:["is she?","isn't she?","does she?","doesn't she?"],k:1,e:"Frase afirmativa com 'is' → tag negativa: isn't she?"},
+  {c:"INGLÊS",q:"They went to school yesterday, _____?",a:["didn't they?","don't they?","weren't they?","did they?"],k:0,e:"'Went' = past simple → tag com 'did' negativa."},
+  {c:"INGLÊS",q:"You don't like coffee, _____?",a:["don't you?","do you?","are you?","did you?"],k:1,e:"Frase negativa → tag afirmativa: do you?"},
+  {c:"INGLÊS",q:"He can swim, _____?",a:["doesn't he?","can he?","can't he?","isn't he?"],k:2,e:"Modal 'can' se repete na tag: can't he?"},
+  {c:"INGLÊS",q:"Let's study together, _____?",a:["will we?","shall we?","do we?","aren't we?"],k:1,e:"Com 'Let's' a tag tradicional é 'shall we?'"},
+  {c:"INGLÊS",q:"Maria and John are students, _____?",a:["isn't they?","aren't they?","don't they?","are they?"],k:1,e:"Sujeito plural → aren't they?"},
+  {c:"INGLÊS",q:"I am late, _____?",a:["am I?","aren't I?","don't I?","isn't I?"],k:1,e:"Exceção clássica: I am → aren't I?"},
+  {c:"INGLÊS",q:"She has finished her homework, _____?",a:["doesn't she?","hasn't she?","isn't she?","didn't she?"],k:1,e:"Present Perfect → tag com has/hasn't."},
+  {c:"INGLÊS",q:"Nobody called you, _____?",a:["didn't they?","did they?","do they?","weren't they?"],k:1,e:"Nobody = negativo → tag positiva: did they?"},
+  {c:"INGLÊS",q:"You will help me tomorrow, _____?",a:["will you?","won't you?","don't you?","aren't you?"],k:1,e:"Will afirmativo → won't you?"},
+  {c:"INGLÊS",q:"He isn't a baseball player, _____?",a:["is he?","has he?","did he?","will he?"],k:0,e:"Negativa com isn't → tag positiva: is he?"},
+  {c:"INGLÊS",q:"You went to the beach with him, _____?",a:["aren't you?","haven't you?","didn't you?","won't you?"],k:2,e:"Past simple afirmativo → didn't you?"},
+  {c:"INGLÊS",q:"They aren't going to arrive late, _____?",a:["are they?","shall they?","aren't they?","haven't they?"],k:0,e:"Negativa → tag positiva: are they?"},
+  {c:"INGLÊS",q:"He won't spend Christmas with us, _____?",a:["will he?","has he?","shall he?","is he?"],k:0,e:"Won't → tag positiva: will he?"},
+  {c:"INGLÊS",q:"She is studying for the math exam, _____?",a:["isn't she?","hasn't she?","didn't she?","won't she?"],k:0,e:"Present Continuous afirmativo → isn't she?"},
+  {c:"INGLÊS",q:"We were good students, _____?",a:["didn't we?","aren't we?","weren't we?","don't we?"],k:2,e:"Past Continuous / were → weren't we?"},
+  {c:"INGLÊS",q:"You haven't been to the U.S., _____?",a:["did you?","do you?","were you?","have you?"],k:3,e:"Present Perfect negativo → have you?"},
+  {c:"INGLÊS",q:"The movie had started by the time you arrived, _____?",a:["isn't it?","hadn't it?","didn't it?","won't it?"],k:1,e:"Past Perfect → hadn't it?"},
+  {c:"INGLÊS",q:"He can speak German really well, _____?",a:["didn't he?","isn't he?","wasn't he?","can't he?"],k:3,e:"Modal can → can't he?"},
+  {c:"INGLÊS",q:"Open the window, _____?",a:["won't you?","will you?","are you?","aren't you?"],k:1,e:"Imperativo → will you? (pedido educado)"},
+  {c:"INGLÊS",q:"I guess they are tired, _____?",a:["are they?","have they?","aren't they?","haven't they?"],k:2,e:"A tag depende da oração principal: aren't they?"},
+  {c:"INGLÊS",q:"Let's invite him to the party, _____?",a:["did we?","are we?","shall we?","will we?"],k:2,e:"Let's → shall we?"},
+  {c:"INGLÊS",q:"Everybody loves chocolate, _____?",a:["do they?","have they?","aren't they?","don't they?"],k:3,e:"Everybody = they → don't they?"},
+  {c:"INGLÊS",q:"I am your best friend, _____?",a:["aren't I?","haven't I?","didn't I?","won't I?"],k:0,e:"I am → aren't I?"},
+  {c:"INGLÊS",q:"There are a few foreign students in your class, _____?",a:["aren't there?","hasn't she?","did he?","weren't you?"],k:0,e:"There are → aren't there?"},
+  {c:"INGLÊS",q:"Pam's just sent the application letter, _____?",a:["hasn't she?","did she?","isn't she?","won't she?"],k:0,e:"Present Perfect (has just) → hasn't she?"},
+  {c:"INGLÊS",q:"Ed didn't pass his final exam, _____?",a:["did he?","does he?","was he?","has he?"],k:0,e:"Didn't → did he?"},
+  {c:"INGLÊS",q:"You were out when I called you, _____?",a:["weren't you?","aren't you?","didn't you?","haven't you?"],k:0,e:"Were → weren't you?"},
+  {c:"INGLÊS",q:"You don't drink milk, _____?",a:["do you?","are you?","have you?","did you?"],k:0,e:"Don't → do you?"},
+  {c:"INGLÊS",q:"Molly's ill, _____?",a:["isn't she?","hasn't she?","doesn't she?","won't she?"],k:0,e:"Is (contraído) → isn't she?"},
+  {c:"INGLÊS",q:"Jen and Mick will visit us next week, _____?",a:["won't they?","don't they?","aren't they?","haven't they?"],k:0,e:"Will → won't they?"},
+  {c:"INGLÊS",q:"You've never been abroad, _____?",a:["have you?","did you?","are you?","will you?"],k:0,e:"Present Perfect negativo → have you?"},
+  {c:"INGLÊS",q:"Bill isn't single, _____?",a:["is he?","does he?","has he?","was he?"],k:0,e:"Isn't → is he?"},
+  {c:"INGLÊS",q:"There isn't a computer in the classroom, _____?",a:["is there?","are there?","isn't there?","was there?"],k:0,e:"There isn't → is there?"},
+  {c:"INGLÊS",q:"They don't come here very often, _____?",a:["do they?","are they?","have they?","did they?"],k:0,e:"Don't → do they?"},
+  {c:"INGLÊS",q:"You couldn't write when you were three, _____?",a:["could you?","can you?","did you?","were you?"],k:0,e:"Couldn't → could you?"},
+  {c:"INGLÊS",q:"Jack's brother works in the Town Hall, _____?",a:["doesn't he?","isn't he?","hasn't he?","didn't he?"],k:0,e:"Works (3ª pessoa) → doesn't he?"},
+  {c:"INGLÊS",q:"Luke can play the violin, _____?",a:["can't he?","doesn't he?","isn't he?","won't he?"],k:0,e:"Can → can't he?"},
+  {c:"INGLÊS",q:"The kids aren't doing their homework, _____?",a:["are they?","do they?","have they?","will they?"],k:0,e:"Aren't → are they?"},
+  {c:"INGLÊS",q:"I'm better at Math than Sue, _____?",a:["aren't I?","am I?","isn't I?","don't I?"],k:0,e:"I am → aren't I?"},
+  {c:"INGLÊS",q:"Cutting-edge experiments should always adhere to ethical standards, _____?",a:["shouldn't they?","doesn't it?","haven't they?","isn't it?"],k:0,e:"Should → shouldn't they?"},
+  {c:"INGLÊS",q:"You haven't finished your homework yet, _____?",a:["have you?","haven't you?","did you?","do you?"],k:0,e:"Haven't → have you?"},
+  {c:"INGLÊS",q:"The concert starts at 7 PM, _____?",a:["doesn't it?","isn't it?","hasn't it?","won't it?"],k:0,e:"Starts (simple present) → doesn't it?"},
+  {c:"INGLÊS",q:"They weren't sure about the schedule, _____?",a:["were they?","aren't they?","did they?","have they?"],k:0,e:"Weren't → were they?"},
+  {c:"INGLÊS",q:"A test needs to be reliable, _____?",a:["doesn't it?","didn't it?","don't it?","isn't it?"],k:0,e:"Needs → doesn't it?"},
+  {c:"INGLÊS",q:"She has never been to Europe, _____?",a:["has she?","hasn't she?","does she?","is she?"],k:0,e:"Has never → has she?"},
+  {c:"INGLÊS",q:"We should leave now, _____?",a:["shouldn't we?","don't we?","aren't we?","won't we?"],k:0,e:"Should → shouldn't we?"},
+  {c:"INGLÊS",q:"It's raining heavily, _____?",a:["isn't it?","doesn't it?","hasn't it?","won't it?"],k:0,e:"It's = it is → isn't it?"},
+  {c:"INGLÊS",q:"They had already left, _____?",a:["hadn't they?","didn't they?","weren't they?","haven't they?"],k:0,e:"Past Perfect → hadn't they?"},
+  {c:"INGLÊS",q:"You must be careful, _____?",a:["mustn't you?","don't you?","aren't you?","won't you?"],k:0,e:"Must → mustn't you?"},
+
+  // ===== CRASE (PORTUGUÊS) =====
+  {c:"PORTUGUÊS",q:"Qual frase está CORRETA quanto ao uso da crase?",a:["Vou à escola.","Começou à estudar.","Andei à pé.","Entreguei o livro à ele."],k:0,e:"Só 'Vou à escola' está correta (a + a)."},
+  {c:"PORTUGUÊS",q:"Em qual frase NÃO se usa crase?",a:["Cheguei à noite.","Fui à Bahia.","Começou a chover.","Entreguei à professora."],k:2,e:"Antes de verbo não há crase: 'a chover'."},
+  {c:"PORTUGUÊS",q:"Assinale a frase em que o uso da crase está INCORRETO.",a:["Voltei à cidade.","Obedeço à professora.","Vou à Salvador amanhã.","Cheguei às oito horas."],k:2,e:"Cidades que repelem artigo: 'vou a Salvador'."},
+  {c:"PORTUGUÊS",q:"Complete corretamente: 'Os alunos chegaram ___ escola e começaram ___ estudar.'",a:["a – à","à – a","à – à","a – a"],k:1,e:"Chegaram à escola (crase); a estudar (sem crase)."},
+  {c:"PORTUGUÊS",q:"A crase consiste na fusão de:",a:["Dois fonemas vocálicos iguais (a + a)","Preposição + artigo masculino","Dois verbos iguais","Artigo + pronome pessoal"],k:0,e:"Crase = a + a (preposição + artigo ou demonstrativo)."},
+  {c:"PORTUGUÊS",q:"Em 'Irei àquela escola', o 'à' representa:",a:["a + aquela","a + a (artigo)","apenas preposição","apenas artigo"],k:0,e:"àquela = a + aquela."},
+  {c:"PORTUGUÊS",q:"Antes de nomes de cidades (sem adjunto) geralmente:",a:["Não se usa crase","Sempre se usa crase","É facultativo","Só se usa no plural"],k:0,e:"Cidades como Fortaleza, Natal, Brasília repelem o artigo."},
+  {c:"PORTUGUÊS",q:"'Vou a Copacabana' está correto porque:",a:["Copacabana repele o artigo","Sempre se usa 'a' sem crase","É nome masculino","É locução"],k:0,e:"Teste: venho de Copacabana (não 'da')."},
+  {c:"PORTUGUÊS",q:"'Vou à Bahia' está correto porque:",a:["Dizemos 'da Bahia', 'na Bahia'","Bahia é masculino","É facultativo","Não se usa artigo"],k:0,e:"Se 'da/na/pela' → há artigo → crase."},
+  {c:"PORTUGUÊS",q:"É facultativo o uso da crase antes de:",a:["Pronomes possessivos com substantivo claro","Verbos","Nomes masculinos","Artigos indefinidos"],k:0,e:"Ex.: à minha casa / a minha casa."},
+  {c:"PORTUGUÊS",q:"Antes de pronomes pessoais (ela, mim, ti...) a crase:",a:["Não ocorre","Sempre ocorre","É facultativa","Só no plural"],k:0,e:"Não se usa crase antes de ela, mim, ti, etc."},
+  {c:"PORTUGUÊS",q:"Na expressão 'a distância' (não determinada):",a:["Não se usa crase","Sempre se usa crase","É facultativo","Só com número"],k:0,e:"'Chamaram-no a distância' (sem crase)."},
+  {c:"PORTUGUÊS",q:"'O barco estava à distância de quarenta metros' está correto porque:",a:["A distância está determinada","É nome masculino","É verbo","É facultativo"],k:0,e:"Quando determinada, usa-se crase."},
+  {c:"PORTUGUÊS",q:"Antes de verbo a crase:",a:["Nunca ocorre","Sempre ocorre","É facultativa","Só no infinitivo"],k:0,e:"Verbo é palavra masculina → sem crase."},
+  {c:"PORTUGUÊS",q:"Nas expressões 'cara a cara', 'frente a frente':",a:["Não há crase (pura preposição)","Há crase obrigatória","É facultativo","Só no plural"],k:0,e:"Repetição do mesmo termo → preposição pura."},
+  {c:"PORTUGUÊS",q:"Antes da palavra 'casa' (sentido de residência, sem adjunto):",a:["Não se usa crase","Sempre se usa","É facultativo","Só no plural"],k:0,e:"'Vou a casa' / 'Voltei a casa'."},
+  {c:"PORTUGUÊS",q:"'Voltei à casa de Pedro' está correto porque:",a:["Há adjunto determinando 'casa'","Casa é sempre com crase","É nome masculino","É locução"],k:0,e:"Com determinante → crase."},
+  {c:"PORTUGUÊS",q:"Antes de 'hora' não determinada:",a:["Não se usa crase","Sempre se usa","É facultativo","Só com número"],k:0,e:"'Impossível a uma hora desta...'"},
+  {c:"PORTUGUÊS",q:"'Às vezes', 'à noite', 'às pressas' são exemplos de:",a:["Locuções adverbiais femininas (com crase)","Erros comuns","Locuções masculinas","Preposições puras"],k:0,e:"Locuções formadas com palavras femininas levam crase."},
+  {c:"PORTUGUÊS",q:"Assinale a opção com crase CORRETA:",a:["Não é sempre que estamos à disposição","É importante ter assuntos à tratar","Atenção à questões alheias","Falar à propósito de algo"],k:0,e:"'à disposição' está correta; as outras estão erradas."},
+  {c:"PORTUGUÊS",q:"'A polícia é uma instituição necessária à ordem e à vida da cidade.' O uso da crase está:",a:["Correto","Incorreto","Facultativo","Só no segundo caso"],k:0,e:"Necessária a + a ordem / a vida → crase."},
+  {c:"PORTUGUÊS",q:"Qual frase tem crase incorreta?",a:["Os clientes pagaram a compra a crédito","A ordem é necessária a todo grupo social","Ninguém abandonou o local a correr","Todos os policiais saíram à mesma hora"],k:3,e:"'à mesma hora' está correta; as outras não levam crase."},
+  {c:"PORTUGUÊS",q:"'Prefiro entrar em uma mercearia hoje a ir ao banquete de um rei há cem anos.' A correção necessária é:",a:["'à cem anos' → 'há cem anos'","Trocar 'a ir'","Trocar 'está progredindo'","Nenhuma"],k:0,e:"'há' de tempo decorrido (não crase)."},
+  {c:"PORTUGUÊS",q:"'Quem perdoa uma culpa encoraja à cometer muitas outras' – o erro é:",a:["Crase antes de verbo","Falta de crase","Crase desnecessária no artigo","Nenhum erro"],k:0,e:"Antes de verbo não há crase."},
+  {c:"PORTUGUÊS",q:"'de 12h às 20 horas' está:",a:["Correto","Incorreto","Facultativo","Só com 'das'"],k:0,e:"Das ... às ... é a forma clássica correta."},
+  {c:"PORTUGUÊS",q:"'colocarão à disposição dos usuários' – o acento grave se deve a:",a:["Preposição + artigo (locução)","Apenas artigo","Apenas preposição","Erro"],k:0,e:"À disposição = locução com palavra feminina."},
+  {c:"PORTUGUÊS",q:"Nas ocorrências 'vise à promoção', 'inacessíveis à grande massa', 'à medida que', 'às vezes' – preposição + artigo ocorrem em:",a:["1 e 2","1 e 4","2 e 3","3 e 4"],k:0,e:"1 e 2 são preposição + artigo; 3 e 4 são locuções."},
+  {c:"PORTUGUÊS",q:"'levar à panela à mesa' – sobre a crase:",a:["Nenhum dos acentos deveria ser empregado","Só o primeiro está correto","Só o segundo está correto","Ambos corretos por razões iguais"],k:0,e:"'levar a panela a mesa' (sem crase nos dois)."},
+  {c:"PORTUGUÊS",q:"'diz respeito à sua vida profissional' – o emprego está:",a:["Correto","Incorreto","Facultativo","Erro de regência"],k:0,e:"Respeito a + a sua → crase (ou facultativo com possessivo)."},
+  {c:"PORTUGUÊS",q:"'o leitor estava à procura de seu destino' – está:",a:["Correto","Incorreto","Facultativo","Erro"],k:0,e:"À procura = locução prepositiva feminina."},
+  {c:"PORTUGUÊS",q:"'habitação submetida à especulação', 'saneamento à espera de recursos' – a segunda ocorrência é:",a:["Locução prepositiva com palavra feminina","Preposição + artigo","Preposição + demonstrativo","Erro"],k:0,e:"À espera = locução."},
+  {c:"PORTUGUÊS",q:"'graças à tecnologia' – o acento grave representa:",a:["União de preposição com artigo definido","Dois artigos","Duas preposições","Artigo + demonstrativo"],k:0,e:"Graças a + a tecnologia."},
+  {c:"PORTUGUÊS",q:"'ênfase àquelas com maior oscilação' – o 'à' em 'àquelas' é:",a:["Preposição a + aquela(s)","Artigo + aquela","Erro","Apenas demonstrativo"],k:0,e:"àquelas = a + aquelas."},
+  {c:"PORTUGUÊS",q:"'dedicadas exclusivamente às compras', 'civilizações à parte', 'ataque à civilização' – preposição + artigo em:",a:["I e III","apenas I-II","apenas II-III","todas"],k:0,e:"I e III = preposição + artigo; II = locução."},
+  {c:"PORTUGUÊS",q:"'mandavam um moleque à farmácia', 'associados ... à improdutividade', 'à sensualidade' – os termos que exigem a preposição 'a' são:",a:["mandavam / associados / associados","moleque / associados / comportamento","mandavam / ódio / antissocial","moleque / ódio / comportamento"],k:0,e:"Os verbos/regentes exigem a preposição."},
+  {c:"PORTUGUÊS",q:"'à aplicação de medidas', 'remete à barbárie', 'à luz das regras' – as três ocorrências:",a:["Exemplificam casos distintos","São todas iguais","Só a última é diferente","Só a primeira é diferente"],k:0,e:"Casos distintos de emprego."},
+  {c:"PORTUGUÊS",q:"Assinale a opção em que a crase ocorre por razão distinta:",a:["serviços públicos à altura","adjetivo hediondo à corrupção","incorporadas à economia","respostas ... às demandas"],k:0,e:"'à altura' é locução; as outras são regência + artigo."},
+  {c:"PORTUGUÊS",q:"'O funcionário veio a chamado do Diretor' – crase?",a:["Não","Sim","Facultativo","Só no plural"],k:0,e:"Não há crase."},
+  {c:"PORTUGUÊS",q:"'De 1970 a 1975' – crase?",a:["Não","Sim","Facultativo","Só com anos"],k:0,e:"Não há crase em intervalos numéricos assim."},
+  {c:"PORTUGUÊS",q:"'Dei a ela todo o dinheiro' – crase?",a:["Não","Sim","Facultativo","Só se for 'à ela'"],k:0,e:"Antes de pronome pessoal não há crase."},
+  {c:"PORTUGUÊS",q:"'O professor foi a casa' – crase?",a:["Não","Sim","Facultativo","Só com adjunto"],k:0,e:"'Casa' = residência sem adjunto → sem crase."},
+  {c:"PORTUGUÊS",q:"'Prestou homenagens a Caxias' – crase?",a:["Não","Sim","Facultativo","Só se for feminino"],k:0,e:"Nome masculino → sem crase."},
+  {c:"PORTUGUÊS",q:"'Remeto, anexo, a V. Exa.' – crase?",a:["Não","Sim","Facultativo","Só no plural"],k:0,e:"Forma de tratamento → sem crase."},
+  {c:"PORTUGUÊS",q:"'A folha 57 verifica-se...' (no sentido de 'na folha') – crase?",a:["Sim (à folha)","Não","Facultativo","Só com número"],k:0,e:"À folha = a + a folha."},
+  {c:"PORTUGUÊS",q:"'O diretor foi a Petrópolis' – crase?",a:["Não","Sim","Facultativo","Só com adjunto"],k:0,e:"Cidade sem adjunto → sem crase."},
+  {c:"PORTUGUÊS",q:"'estava em frente a janela' – crase?",a:["Sim (à janela)","Não","Facultativo","Só no plural"],k:0,e:"Frente a + a janela → à."},
+  {c:"PORTUGUÊS",q:"'emendas a tinta encarnada' – crase?",a:["Não","Sim","Facultativo","Só se for 'à tinta'"],k:0,e:"'A tinta' = modo (sem crase)."},
+  {c:"PORTUGUÊS",q:"'distribuídas as candidatas' – crase?",a:["Sim (às candidatas)","Não","Facultativo","Só no singular"],k:0,e:"Distribuídas a + as candidatas → às."},
+  {c:"PORTUGUÊS",q:"'enviado a Câmara' – crase?",a:["Sim (à Câmara)","Não","Facultativo","Só se for 'a Câmara'"],k:0,e:"A + a Câmara → à."},
+  {c:"PORTUGUÊS",q:"'Agrediram o sargento a tiro' – crase?",a:["Não","Sim","Facultativo","Só no plural"],k:0,e:"'A tiro' = modo (sem crase)."},
+  {c:"PORTUGUÊS",q:"'pagamento a vista' – crase?",a:["Sim (à vista)","Não","Facultativo","Só em cheques"],k:0,e:"À vista = locução."},
+  {c:"PORTUGUÊS",q:"'não tem direito a remuneração' – crase?",a:["Não","Sim","Facultativo","Só se for 'à remuneração'"],k:0,e:"Direito a + remuneração (sem artigo definido claro no contexto clássico)."},
+  {c:"PORTUGUÊS",q:"'Maria chegou a hora certa' – crase?",a:["Sim (à hora)","Não","Facultativo","Só com número"],k:0,e:"À hora certa."},
+  {c:"PORTUGUÊS",q:"'motor a gasolina' – crase?",a:["Não","Sim","Facultativo","Só se for 'à gasolina'"],k:0,e:"'A gasolina' = modo/combustível (sem crase)."},
+  {c:"PORTUGUÊS",q:"'romance a publicar' – crase?",a:["Não","Sim","Facultativo","Só no plural"],k:0,e:"Antes de verbo → sem crase."},
+  {c:"PORTUGUÊS",q:"'A família foi aquele sítio' – crase?",a:["Sim (àquele)","Não","Facultativo","Só se for 'a aquele'"],k:0,e:"Foi a + aquele → àquele."},
+  {c:"PORTUGUÊS",q:"'Eis a matéria referente às provas' – o uso está:",a:["Correto","Incorreto","Facultativo","Erro de regência"],k:0,e:"Referente a + as provas → às."},
+  {c:"PORTUGUÊS",q:"'Esta história está ligada à dos Jesuítas' – está:",a:["Correto","Incorreto","Facultativo","Erro"],k:0,e:"Ligada a + a (dos) → à."},
+  {c:"PORTUGUÊS",q:"'morrendo uma à uma' – está:",a:["Incorreto","Correto","Facultativo","Só no masculino"],k:0,e:"'Uma a uma' (sem crase)."},
+  {c:"PORTUGUÊS",q:"'me vem à lembrança' – está:",a:["Correto","Incorreto","Facultativo","Erro"],k:0,e:"Vem a + a lembrança → à."},
+  {c:"PORTUGUÊS",q:"'ofereceram livros às alunas' – está:",a:["Correto","Incorreto","Facultativo","Só no singular"],k:0,e:"A + as alunas → às."},
+  {c:"PORTUGUÊS",q:"'poema à Brasília' – está:",a:["Incorreto","Correto","Facultativo","Só com adjunto"],k:0,e:"Brasília (cidade) sem adjunto → sem crase."},
+  {c:"PORTUGUÊS",q:"'submetido à inspeção' – está:",a:["Incorreto (no contexto clássico de alguns exercícios)","Correto","Facultativo","Só no plural"],k:0,e:"Muitos gabaritos marcam como erro em contextos específicos; regência pode variar."},
+  {c:"PORTUGUÊS",q:"'ferido à metralhadora' – está:",a:["Incorreto","Correto","Facultativo","Só no plural"],k:0,e:"'A metralhadora' = instrumento (sem crase)."},
+  {c:"PORTUGUÊS",q:"'falou às classes trabalhadoras' – está:",a:["Correto","Incorreto","Facultativo","Só no singular"],k:0,e:"A + as classes → às."},
+  {c:"PORTUGUÊS",q:"'Refiro-me à mulher da pensão' – está:",a:["Correto","Incorreto","Facultativo","Erro"],k:0,e:"Refiro-me a + a mulher → à."},
+  {c:"PORTUGUÊS",q:"'provimento àquele agravo' – está:",a:["Correto","Incorreto","Facultativo","Erro"],k:0,e:"A + aquele → àquele."},
+  {c:"PORTUGUÊS",q:"'Vendi à casa de Pedro' – está:",a:["Incorreto","Correto","Facultativo","Só com 'a casa'"],k:0,e:"Vender a casa (sem crase no sentido de alienar)."},
+  {c:"PORTUGUÊS",q:"'prêmio coube às jovens' – está:",a:["Correto","Incorreto","Facultativo","Só no singular"],k:0,e:"A + as jovens → às."},
+  {c:"PORTUGUÊS",q:"'destinado à escrita' – está:",a:["Correto","Incorreto","Facultativo","Erro"],k:0,e:"Destinado a + a escrita → à."},
+  {c:"PORTUGUÊS",q:"'Comprei à sua casa' – está:",a:["Incorreto","Correto","Facultativo","Só com possessivo"],k:0,e:"Comprar a casa (sem crase)."},
+  {c:"PORTUGUÊS",q:"'Quanto à aplicação do aviso' – está:",a:["Correto","Incorreto","Facultativo","Erro"],k:0,e:"Quanto a + a aplicação → à."},
+  {c:"PORTUGUÊS",q:"'Homenagens à gloriosa Joana D'Arc' – está:",a:["Correto","Incorreto","Facultativo","Só sem adjetivo"],k:0,e:"A + a gloriosa → à."},
+  {c:"PORTUGUÊS",q:"'de frente à frente' – está:",a:["Incorreto","Correto","Facultativo","Só no plural"],k:0,e:"Frente a frente (sem crase)."},
+  {c:"PORTUGUÊS",q:"'remetidos às unidades militares' – está:",a:["Correto","Incorreto","Facultativo","Só no singular"],k:0,e:"A + as unidades → às."},
+  {c:"PORTUGUÊS",q:"'destinaram-se às meninas pobres' – está:",a:["Correto","Incorreto","Facultativo","Erro"],k:0,e:"A + as meninas → às."},
+  {c:"PORTUGUÊS",q:"'A obra acha-se à venda' – está:",a:["Correto","Incorreto","Facultativo","Erro"],k:0,e:"À venda = locução."},
+  {c:"PORTUGUÊS",q:"'prêmio àquele menino' – está:",a:["Correto","Incorreto","Facultativo","Erro"],k:0,e:"A + aquele → àquele."},
+  {c:"PORTUGUÊS",q:"'Demos o dinheiro à nossa mãe' – está:",a:["Correto (ou facultativo)","Incorreto","Sempre errado","Só sem possessivo"],k:0,e:"Antes de possessivo é facultativo, mas aceito."},
+  {c:"PORTUGUÊS",q:"'tiro foi à queima-roupa' – está:",a:["Correto","Incorreto","Facultativo","Erro"],k:0,e:"À queima-roupa = locução."},
+  {c:"PORTUGUÊS",q:"'Taxas à pagar' – está:",a:["Incorreto","Correto","Facultativo","Só no plural"],k:0,e:"Antes de verbo → sem crase."},
+  {c:"PORTUGUÊS",q:"'refiro-me à que comprei' – está:",a:["Correto","Incorreto","Facultativo","Erro"],k:0,e:"À que = a + a (que)."},
+  {c:"PORTUGUÊS",q:"'início à 20 do mês' – está:",a:["Incorreto","Correto","Facultativo","Só com 'às'"],k:0,e:"Datas: a 20 (sem crase)."},
+  {c:"PORTUGUÊS",q:"'Refiro-me a questões outras' – está:",a:["Correto (sem crase)","Incorreto","Facultativo","Só com 'às'"],k:0,e:"Questões no plural + a singular → sem crase."},
+  {c:"PORTUGUÊS",q:"'O funcionário à que se refere' – está:",a:["Incorreto","Correto","Facultativo","Erro de concordância"],k:0,e:"'A que' (sem crase neste caso clássico)."},
+  {c:"PORTUGUÊS",q:"'recebida à bala' – está:",a:["Correto","Incorreto","Facultativo","Só no plural"],k:0,e:"À bala = locução."},
+  {c:"PORTUGUÊS",q:"'de face à face' – está:",a:["Incorreto","Correto","Facultativo","Só no plural"],k:0,e:"Face a face (sem crase)."},
+  {c:"PORTUGUÊS",q:"'ideia me veio à mente' – está:",a:["Correto","Incorreto","Facultativo","Erro"],k:0,e:"Veio a + a mente → à."},
+  {c:"PORTUGUÊS",q:"'dar à esta aluna' – está:",a:["Incorreto","Correto","Facultativo","Só com 'a esta'"],k:0,e:"Antes de 'esta' não há crase."},
+  {c:"PORTUGUÊS",q:"'Desejam à vossa senhoria' – está:",a:["Incorreto","Correto","Facultativo","Só no plural"],k:0,e:"Forma de tratamento → sem crase."},
+  {c:"PORTUGUÊS",q:"'pertenceu à casa dos Bragança' – está:",a:["Correto","Incorreto","Facultativo","Erro"],k:0,e:"A + a casa → à."},
+  {c:"PORTUGUÊS",q:"'Graças à Deus' – está:",a:["Incorreto","Correto","Facultativo","Só no plural"],k:0,e:"Deus é masculino → graças a Deus."},
+  {c:"PORTUGUÊS",q:"'chegou à certa hora' – está:",a:["Incorreto","Correto","Facultativo","Só com número"],k:0,e:"'Certa' = indefinido → sem crase."},
+  {c:"PORTUGUÊS",q:"'camisas à R$ 25,00' – está:",a:["Incorreto","Correto","Facultativo","Só no plural"],k:0,e:"Preço: a R$ (sem crase)."},
+  {c:"PORTUGUÊS",q:"'detido à força' – está:",a:["Correto","Incorreto","Facultativo","Erro"],k:0,e:"À força = locução."},
+  {c:"PORTUGUÊS",q:"'Vou à terra, logo que o navio chegue' – no sentido náutico está:",a:["Incorreto","Correto","Facultativo","Só com adjunto"],k:0,e:"'A terra' (náutico) → sem crase."},
+  {c:"PORTUGUÊS",q:"'Dalvinha vai a bela Campinas' – crase?",a:["Sim (à bela)","Não","Facultativo","Só sem adjetivo"],k:0,e:"Com adjunto → à bela Campinas."},
+  {c:"PORTUGUÊS",q:"'foram as casas' – crase?",a:["Não","Sim (às casas)","Facultativo","Só no singular"],k:0,e:"No contexto clássico muitos marcam sem; depende da regência."},
+  {c:"PORTUGUÊS",q:"'Dediquei um livro a minha mãe' – crase?",a:["Facultativo","Obrigatória","Proibida","Só no plural"],k:0,e:"Antes de possessivo é facultativo."},
+  {c:"PORTUGUÊS",q:"'Deixai vir a mim' – crase?",a:["Não","Sim","Facultativo","Só no plural"],k:0,e:"Antes de 'mim' → sem crase."},
+  {c:"PORTUGUÊS",q:"'Fomos as fazendas distantes' – crase?",a:["Sim (às fazendas)","Não","Facultativo","Só no singular"],k:0,e:"A + as fazendas → às."},
+  {c:"PORTUGUÊS",q:"'obedeceram a esta ordem' – crase?",a:["Não","Sim","Facultativo","Só no plural"],k:0,e:"Antes de 'esta' → sem crase."},
+  {c:"PORTUGUÊS",q:"'Refiro-me a cada questão' – crase?",a:["Não","Sim","Facultativo","Só no plural"],k:0,e:"'Cada' = indefinido → sem crase."},
+  {c:"PORTUGUÊS",q:"'não se dirigiram a nenhuma pessoa' – crase?",a:["Não","Sim","Facultativo","Só no plural"],k:0,e:"'Nenhuma' → sem crase."},
+  {c:"PORTUGUÊS",q:"'nada a essa menina' – crase?",a:["Não","Sim","Facultativo","Só no plural"],k:0,e:"Antes de 'essa' → sem crase."},
+  {c:"PORTUGUÊS",q:"'A quantas pessoas você respondeu?' – crase?",a:["Não","Sim","Facultativo","Só no singular"],k:0,e:"Antes de interrogativo → sem crase."},
+  {c:"PORTUGUÊS",q:"'de ponta a ponta' – crase?",a:["Não","Sim","Facultativo","Só no plural"],k:0,e:"Repetição → sem crase."},
+  {c:"PORTUGUÊS",q:"'A noitinha, voltamos' – crase?",a:["Sim (À noitinha)","Não","Facultativo","Só com 'a'"],k:0,e:"À noitinha = locução adverbial."},
+  {c:"PORTUGUÊS",q:"'Visitei a casa paterna' – crase?",a:["Sim (à casa)","Não","Facultativo","Só sem adjetivo"],k:0,e:"Com adjunto → à casa paterna."},
+  {c:"PORTUGUÊS",q:"'duas a duas' – crase?",a:["Não","Sim","Facultativo","Só no singular"],k:0,e:"Repetição → sem crase."},
+  {c:"PORTUGUÊS",q:"'Vendi aquele sítio' – crase?",a:["Não","Sim (àquele)","Facultativo","Só no plural"],k:0,e:"Vender aquele (sem preposição a)."},
+  {c:"PORTUGUÊS",q:"'ofereceu um poema a V. Exa.' – crase?",a:["Não","Sim","Facultativo","Só no plural"],k:0,e:"Forma de tratamento → sem crase."},
+  {c:"PORTUGUÊS",q:"'referente aquele prédio' – crase?",a:["Sim (àquele)","Não","Facultativo","Só no plural"],k:0,e:"Referente a + aquele → àquele."},
+  {c:"PORTUGUÊS",q:"'Rezemos um terço a Nossa Senhora' – crase?",a:["Não","Sim","Facultativo","Só com 'à'"],k:0,e:"Antes de nomes de santos/Nossa Senhora costuma-se sem (ou facultativo em alguns casos)."},
+  {c:"PORTUGUÊS",q:"'Peço a senhora a fineza...' – crase?",a:["Sim (à senhora)","Não","Facultativo","Só no plural"],k:0,e:"À senhora (exceção clássica)."},
+  {c:"PORTUGUÊS",q:"'Vocês compraram aqueles livros' – crase?",a:["Não","Sim (àqueles)","Facultativo","Só no singular"],k:0,e:"Sem preposição 'a' exigida → sem crase."}
+];
+
+const $ = id => document.getElementById(id);
+let auth, db, uid, roomRef, roomCode, roomData, unsubscribe = null, isHost = false, busy = false;
+let timerInterval = null, localQuestionIdx = -1;
+
+function show(id){["setup","lobby","game","result"].forEach(x=>$(x).classList.toggle("hidden",x!==id));}
+function msg(t, cls=""){ $("setupMsg").textContent=t; $("setupMsg").className="notice small "+cls; }
+function cleanName(){return $("playerName").value.trim().slice(0,18)||"Jogador";}
+function makeCode(){return Math.random().toString(36).slice(2,8).toUpperCase();}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function playersOf(data){return Object.entries(data?.players||{}).map(([id,p])=>({id,...p}));}
+function playerCards(data,target){const ps=playersOf(data);$(target).innerHTML=ps.map(p=>`<div class="player"><strong>${escapeHtml(p.name)}</strong><div class="score">${p.score||0} pts</div><span class="small muted">${p.id===uid?"Você":(p.ready?"Conectado":"Na sala")}</span></div>`).join("");}
+function validConfig(){return firebaseConfig.apiKey!=="COLOQUE_SUA_API_KEY" && firebaseConfig.projectId!=="SEU-PROJETO";}
+
+function formatTime(sec){
+  const m=Math.floor(sec/60), s=Math.floor(sec%60);
+  return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+}
+
+function stopTimer(){
+  if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
+}
+
+function startLocalTimer(startedAt){
+  stopTimer();
+  const update=()=>{
+    if(!roomData||roomData.status!=="playing"){stopTimer();return;}
+    const elapsed=(Date.now()-(startedAt||Date.now()))/1000;
+    const left=Math.max(0,QUESTION_TIME-elapsed);
+    $("timerText").textContent=formatTime(left);
+    const pct=(left/QUESTION_TIME)*100;
+    $("timerBar").style.width=pct+"%";
+    $("timerBar").parentElement.classList.toggle("urgent",left<=30);
+    if(left<=0&&isHost){
+      // tempo esgotou → força avanço mesmo sem as 2 respostas
+      forceAdvanceOnTimeout();
+    }
+  };
+  update();
+  timerInterval=setInterval(update,250);
+}
+
+async function forceAdvanceOnTimeout(){
+  if(!isHost||!roomData||roomData.status!=="playing"||advancing)return;
+  const idx=roomData.current||0;
+  const answers=roomData.answers?.[idx]||{};
+  if(Object.keys(answers).length>=2)return; // já vai avançar pelo fluxo normal
+  advancing=true;
+  try{
+    // marca quem não respondeu como errado (0 ponto)
+    const updates={};
+    // pontua só os que acertaram
+    for(const [pid,a] of Object.entries(answers)){
+      if(a.correct) updates[`players/${pid}/score`]=(roomData.players?.[pid]?.score||0)+10;
+    }
+    if(Object.keys(updates).length) await roomRef.update(updates);
+    await new Promise(r=>setTimeout(r,800));
+    const fresh=(await roomRef.once("value")).val();
+    if(fresh.status==="playing"&&fresh.current===idx){
+      if(idx+1>=QUESTIONS.length) await roomRef.update({status:"finished"});
+      else await roomRef.update({current:idx+1, questionStartedAt:Date.now(), answers:{...(fresh.answers||{}), [idx]: answers}});
+    }
+  }finally{advancing=false;}
+}
+
+async function connect(){
+  if(!validConfig()) throw new Error("Falta configurar o Firebase. Abra o README e siga os passos. Nunca deixe chaves reais no código público.");
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  auth=firebase.auth();db=firebase.database();
+  const cred=await auth.signInAnonymously();uid=cred.user.uid;
+}
+
+async function createRoom(){
+  try{
+    msg("Conectando...");
+    await connect();
+    isHost=true;
+    roomCode=makeCode();
+    roomRef=db.ref("rooms/"+roomCode);
+    await roomRef.set({
+      status:"lobby",
+      host:uid,
+      current:0,
+      questionStartedAt:null,
+      players:{[uid]:{name:cleanName(),score:0,ready:true}},
+      answers:{},
+      createdAt:Date.now()
+    });
+    enterRoom();
+  }catch(e){msg(e.message,"error");}
+}
+
+async function joinRoom(){
+  try{
+    msg("Entrando...");
+    await connect();
+    isHost=false;
+    roomCode=$("roomCode").value.trim().toUpperCase();
+    if(!/^[A-Z0-9]{6}$/.test(roomCode)) throw new Error("Digite um código válido de 6 caracteres.");
+    roomRef=db.ref("rooms/"+roomCode);
+    const snap=await roomRef.once("value");
+    if(!snap.exists()) throw new Error("Sala não encontrada. Confira o código.");
+    const data=snap.val();
+    if(data.status!=="lobby") throw new Error("Essa partida já começou.");
+    if(playersOf(data).length>=2) throw new Error("Essa sala já está cheia.");
+    await roomRef.child("players/"+uid).set({name:cleanName(),score:0,ready:true});
+    enterRoom();
+  }catch(e){msg(e.message,"error");}
+}
+
+function enterRoom(){
+  show("lobby");
+  $("roomCodeDisplay").textContent=roomCode;
+  if(unsubscribe) roomRef.off("value",unsubscribe);
+  unsubscribe=snap=>{
+    roomData=snap.val();
+    if(!roomData){msg("A sala foi encerrada.","error");show("setup");stopTimer();return;}
+    renderRoom();
+  };
+  roomRef.on("value",unsubscribe);
+}
+
+function renderRoom(){
+  if(!roomData)return;
+  if(roomData.status==="finished"){stopTimer();renderResults();return;}
+  if(roomData.status==="playing"){show("game");renderGame();return;}
+  show("lobby");
+  playerCards(roomData,"lobbyPlayers");
+  const count=playersOf(roomData).length;
+  $("lobbyStatus").textContent=count===2?"Os dois jogadores estão prontos. O anfitrião pode iniciar!":"Esperando seu amigo entrar...";
+  $("startBtn").classList.toggle("hidden",!(isHost&&count===2));
+}
+
+async function startGame(){
+  if(!isHost||playersOf(roomData).length!==2)return;
+  await roomRef.update({
+    status:"playing",
+    current:0,
+    answers:{},
+    questionStartedAt:Date.now(),
+    startedAt:Date.now()
+  });
+}
+
+function renderGame(){
+  const idx=roomData.current||0;
+  if(idx>=QUESTIONS.length){renderResults();return;}
+
+  // reinicia timer local se mudou de questão
+  if(localQuestionIdx!==idx){
+    localQuestionIdx=idx;
+    startLocalTimer(roomData.questionStartedAt||Date.now());
+  }
+
+  const q=QUESTIONS[idx];
+  const myAnswer=roomData.answers?.[idx]?.[uid];
+  const answers=roomData.answers?.[idx]||{};
+  const otherId=Object.keys(roomData.players||{}).find(id=>id!==uid);
+  const otherAnswered=otherId&&answers[otherId]!==undefined;
+  const count=Object.keys(answers).length;
+
+  $("roundLabel").textContent=`Questão ${idx+1}/${QUESTIONS.length}`;
+  $("categoryLabel").textContent=q.c;
+  $("progress").style.width=((idx)/QUESTIONS.length*100)+"%";
+  $("questionText").textContent=q.q;
+
+  $("answerButtons").innerHTML=q.a.map((a,i)=>{
+    let cls="";
+    if(myAnswer!==undefined){
+      if(i===myAnswer) cls="selected";
+      // opcional: mostrar certo/errado depois que ambos responderam
+      if(count>=2){
+        if(i===q.k) cls+=" correct";
+        else if(i===myAnswer) cls+=" wrong";
+      }
+    }
+    return `<button data-answer="${i}" class="${cls}" ${myAnswer!==undefined?"disabled":""}>${String.fromCharCode(65+i)}) ${escapeHtml(a)}</button>`;
+  }).join("");
+
+  [...$("answerButtons").querySelectorAll("button")].forEach(b=>{
+    b.addEventListener("click",()=>sendAnswer(Number(b.dataset.answer)));
+  });
+
+  // status claro sobre o adversário
+  let statusHtml="";
+  if(myAnswer!==undefined){
+    if(otherAnswered){
+      statusHtml=`<span class="status-ok">✓ Você e o adversário já responderam.</span> Aguardando próximo...`;
+    }else{
+      statusHtml=`<span class="status-ok">✓ Sua resposta foi enviada.</span> <span class="status-wait">Aguardando o adversário responder...</span>`;
+    }
+  }else{
+    if(otherAnswered){
+      statusHtml=`<span class="status-wait">⚠ O adversário já respondeu!</span> Responda agora.`;
+    }else{
+      statusHtml=`Responda! Ninguém respondeu ainda.`;
+    }
+  }
+  $("answerStatus").innerHTML=statusHtml;
+  playerCards(roomData,"gamePlayers");
+}
+
+async function sendAnswer(choice){
+  if(busy||!roomData||roomData.answers?.[roomData.current]?.[uid]!==undefined)return;
+  busy=true;
+  const idx=roomData.current;
+  const q=QUESTIONS[idx];
+  try{
+    await roomRef.child(`answers/${idx}/${uid}`).set({
+      choice,
+      correct:choice===q.k,
+      at:Date.now()
+    });
+  }finally{busy=false;}
+}
+
+let advancing=false;
+async function maybeAdvance(){
+  if(!isHost||!roomData||roomData.status!=="playing"||advancing)return;
+  const idx=roomData.current||0;
+  const answers=roomData.answers?.[idx]||{};
+  if(Object.keys(answers).length<2)return;
+  advancing=true;
+  try{
+    const updates={};
+    for(const [pid,a] of Object.entries(answers)){
+      if(a.correct) updates[`players/${pid}/score`]=(roomData.players?.[pid]?.score||0)+10;
+    }
+    if(Object.keys(updates).length) await roomRef.update(updates);
+    await new Promise(r=>setTimeout(r,1200));
+    const fresh=(await roomRef.once("value")).val();
+    if(fresh.status==="playing"&&fresh.current===idx&&Object.keys(fresh.answers?.[idx]||{}).length===2){
+      if(idx+1>=QUESTIONS.length) await roomRef.update({status:"finished"});
+      else await roomRef.update({current:idx+1, questionStartedAt:Date.now()});
+    }
+  }finally{advancing=false;}
+}
+
+function renderResults(){
+  stopTimer();
+  show("result");
+  $("progress").style.width="100%";
+  const ps=playersOf(roomData).sort((a,b)=>(b.score||0)-(a.score||0));
+  $("winnerText").textContent=ps[0]?.score===ps[1]?.score?"Empate! Mandaram bem demais.":`🏆 ${ps[0]?.name} venceu!`;
+  $("finalPlayers").innerHTML=ps.map((p,i)=>`<div class="player"><strong>${i===0?"🥇 ":"🥈 "}${escapeHtml(p.name)}</strong><div class="score">${p.score||0} pts</div></div>`).join("");
+}
+
+async function leaveRoom(){
+  stopTimer();
+  try{
+    if(roomRef&&uid) await roomRef.child("players/"+uid).remove();
+    if(unsubscribe&&roomRef) roomRef.off("value",unsubscribe);
+  }catch(e){}
+  roomRef=null;roomData=null;roomCode=null;unsubscribe=null;isHost=false;localQuestionIdx=-1;
+  show("setup");
+  msg("Crie uma sala e envie o código ao seu amigo.");
+}
+
+$("createBtn").onclick=createRoom;
+$("showJoinBtn").onclick=()=>$("joinArea").classList.toggle("hidden");
+$("joinBtn").onclick=joinRoom;
+$("startBtn").onclick=startGame;
+$("leaveBtn").onclick=leaveRoom;
+$("backBtn").onclick=leaveRoom;
+$("copyBtn").onclick=async()=>{
+  try{await navigator.clipboard.writeText(roomCode);$("copyBtn").textContent="Código copiado!";}
+  catch(e){$("copyBtn").textContent="Código: "+roomCode;}
+};
+$("roomCode").addEventListener("input",e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,6));
+
+setInterval(()=>{if(isHost&&roomData?.status==="playing")maybeAdvance();},600);
+</script>
+</body>
+</html>
