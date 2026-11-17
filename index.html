@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <title>Quiz Battle — Inglês vs Português</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1020;--panel:#151e32;--panel2:#1d2942;--line:#2b3a59;--text:#f5f7ff;--muted:#aab6d0;--blue:#65a8ff;--purple:#a78bfa;--green:#42d392;--red:#ff7185}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#1b2a49 0,#0b1020 55%);font-family:Inter,system-ui,Arial,sans-serif;color:var(--text);min-height:100vh}
+    .wrap{width:min(760px,100%);margin:auto;padding:22px 16px 42px}.brand{text-align:center;margin:10px 0 24px}.brand .logo{font-size:42px}.brand h1{font-size:clamp(25px,6vw,38px);margin:5px 0}.brand p{color:var(--muted);margin:0}
+    .card{background:rgba(21,30,50,.94);border:1px solid var(--line);border-radius:20px;padding:20px;margin:14px 0;box-shadow:0 16px 40px #0003}
+    h2{margin:0 0 14px;font-size:21px}label{display:block;color:var(--muted);font-size:13px;margin:12px 0 6px}
+    input{width:100%;padding:14px;border:1px solid var(--line);border-radius:12px;background:#0d1527;color:white;font-size:16px;outline:none}input:focus{border-color:var(--blue)}
+    button{border:0;border-radius:12px;padding:13px 16px;font-weight:750;font-size:15px;cursor:pointer;color:#07111f;background:linear-gradient(135deg,#78bcff,#a78bfa);width:100%;margin-top:12px}
+    button.secondary{background:var(--panel2);border:1px solid var(--line);color:var(--text)}button:disabled{opacity:.45;cursor:not-allowed}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.hidden{display:none!important}.muted{color:var(--muted)}.small{font-size:13px}.pill{display:inline-block;padding:6px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px}
+    .players{display:grid;grid-template-columns:1fr 1fr;gap:10px}.player{background:#0e172a;border:1px solid var(--line);padding:13px;border-radius:14px}.player strong{display:block;overflow-wrap:anywhere}.score{font-size:25px;font-weight:850;color:var(--green)}
+    .question{font-size:21px;line-height:1.4;margin:16px 0}.answers{display:grid;gap:10px}.answers button{margin:0;text-align:left;background:#202d48;color:white;border:1px solid #354667}.answers button:hover:not(:disabled){border-color:var(--blue);background:#293b5e}.answers button.selected{border-color:var(--blue);background:#263d66}.answers button.correct{border-color:var(--green);background:#123d35}.answers button.wrong{border-color:var(--red);background:#482431}
+    .bar{height:8px;background:#26334e;border-radius:20px;overflow:hidden;margin:12px 0}.bar span{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--purple));width:0}
+    .notice{padding:12px;border-radius:12px;background:#0d1729;border:1px solid var(--line);color:var(--muted);margin-top:12px}.error{color:#ff9cab}.success{color:#7ee6b5}.center{text-align:center}.code{font-size:28px;letter-spacing:6px;font-weight:900;color:#9fc9ff}
+    footer{text-align:center;color:#73809b;font-size:12px;margin-top:22px}
+    @media(max-width:520px){.card{padding:16px}.row{grid-template-columns:1fr}.question{font-size:19px}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header class="brand"><div class="logo">⚔️</div><h1>Quiz Battle</h1><p>Inglês vs Português · Duelo de conhecimento</p></header>
+
+  <section id="setup" class="card">
+    <h2>Entre na batalha</h2>
+    <label for="playerName">Seu nome</label><input id="playerName" maxlength="18" placeholder="Ex.: Dgamer">
+    <div class="row">
+      <button id="createBtn">＋ Criar sala</button>
+      <button id="showJoinBtn" class="secondary">Entrar com código</button>
+    </div>
+    <div id="joinArea" class="hidden">
+      <label for="roomCode">Código da sala</label><input id="roomCode" maxlength="6" placeholder="ABC123" autocapitalize="characters">
+      <button id="joinBtn">Entrar na sala</button>
+    </div>
+    <div id="setupMsg" class="notice small">Crie uma sala e envie o código ao seu amigo. Os dois precisam estar conectados à internet.</div>
+  </section>
+
+  <section id="lobby" class="card hidden">
+    <div class="center"><span class="pill">SALA PRIVADA</span><p class="muted small">Compartilhe este código com seu amigo:</p><div id="roomCodeDisplay" class="code">------</div><button id="copyBtn" class="secondary">Copiar código</button></div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
+    <h2>Jogadores</h2><div id="lobbyPlayers" class="players"></div>
+    <p id="lobbyStatus" class="notice">Esperando o segundo jogador...</p>
+    <button id="startBtn" class="hidden">Começar partida</button>
+    <button id="leaveBtn" class="secondary">Sair da sala</button>
+  </section>
+
+  <section id="game" class="card hidden">
+    <div class="row"><span id="roundLabel" class="pill">Questão 1/20</span><span id="categoryLabel" class="pill">INGLÊS</span></div>
+    <div class="bar"><span id="progress"></span></div>
+    <div id="questionText" class="question"></div>
+    <div id="answerButtons" class="answers"></div>
+    <div id="answerStatus" class="notice">Escolha sua resposta.</div>
+    <h2 style="margin-top:22px">Placar</h2><div id="gamePlayers" class="players"></div>
+  </section>
+
+  <section id="result" class="card hidden center">
+    <div style="font-size:48px">🏆</div><h2>Fim de jogo!</h2><div id="winnerText" class="question"></div><div id="finalPlayers" class="players"></div>
+    <button id="backBtn">Voltar ao início</button>
+  </section>
+  <footer>Quiz Battle · Feito para jogar com amigos</footer>
+</div>
+
+<!-- Firebase: use o SDK compat para manter o projeto em um único HTML. -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+/*
+  CONFIGURAÇÃO OBRIGATÓRIA:
+  1. Crie um projeto em https://console.firebase.google.com/
+  2. Adicione um app Web e copie os dados para o objeto abaixo.
+  3. Ative Authentication > Sign-in method > Anonymous.
+  4. Crie Realtime Database e publique as regras do arquivo firebase-rules.json.
+*/
+const firebaseConfig = {
+  apiKey: "AIzaSyBZf92G1UBzyRx2wJ9UNwEMHOQ6sftr7aU",
+  authDomain: "quiz-battle-ff792.firebaseapp.com",
+  databaseURL: "https://quiz-battle-ff792-default-rtdb.firebaseio.com",
+  projectId: "quiz-battle-ff792",
+  storageBucket: "quiz-battle-ff792.firebasestorage.app",
+  messagingSenderId: "884165024342",
+  appId: "1:884165024342:web:15905622abe8333c76b9f7"
+};
+
+const QUESTIONS = [
+ {c:"INGLÊS",q:"She is your sister, _____?",a:["is she?","isn't she?","does she?","doesn't she?"],k:1,e:"A frase é afirmativa e usa is; a tag fica negativa: isn't she?"},
+ {c:"PORTUGUÊS",q:"Qual é a principal finalidade de um memorial?",a:["Listar apenas experiências profissionais","Narrar vivências e aprendizados pessoais","Divulgar um produto","Apresentar regras gramaticais"],k:1,e:"O memorial apresenta a trajetória, as experiências e as reflexões de alguém."},
+ {c:"INGLÊS",q:"They went to school yesterday, _____?",a:["didn't they?","don't they?","weren't they?","did they?"],k:0,e:"Went está no passado simples; a tag usa did, na forma negativa."},
+ {c:"PORTUGUÊS",q:"Qual autor escreveu Vidas Secas?",a:["Jorge Amado","José de Alencar","Graciliano Ramos","Machado de Assis"],k:2,e:"Vidas Secas é uma obra de Graciliano Ramos, publicada em 1938."},
+ {c:"INGLÊS",q:"You don't like coffee, _____?",a:["don't you?","do you?","are you?","did you?"],k:1,e:"A frase é negativa com don't; a tag fica afirmativa: do you?"},
+ {c:"PORTUGUÊS",q:"Assinale a alternativa em que a crase está correta.",a:["Vou à escola.","Começou à estudar.","Andei à pé.","Entreguei o livro à ele."],k:0,e:"Em 'vou à escola', ocorre a fusão da preposição a com o artigo a."},
+ {c:"INGLÊS",q:"He can swim, _____?",a:["doesn't he?","can he?","can't he?","isn't he?"],k:2,e:"Com o modal can, repetimos o próprio auxiliar na tag: can't he?"},
+ {c:"PORTUGUÊS",q:"Uma característica da prosa modernista de 1930 é:",a:["Idealização da vida aristocrática","Foco exclusivo em mitologia","Denúncia de problemas sociais e regionais","Imitação obrigatória do Arcadismo"],k:2,e:"A segunda fase modernista aborda desigualdade, seca, pobreza e conflitos humanos."},
+ {c:"INGLÊS",q:"Let's study together, _____?",a:["will we?","shall we?","do we?","aren't we?"],k:1,e:"A tag tradicional usada com Let's é shall we?"},
+ {c:"PORTUGUÊS",q:"Em qual frase NÃO se usa crase?",a:["Cheguei à noite.","Fui à Bahia.","Começou a chover.","Entreguei à professora."],k:2,e:"Não ocorre crase antes de verbo: 'a chover'."},
+ {c:"INGLÊS",q:"Maria and John are students, _____?",a:["isn't they?","aren't they?","don't they?","are they?"],k:1,e:"Maria and John equivale a they; a frase afirmativa pede tag negativa."},
+ {c:"PORTUGUÊS",q:"Qual informação costuma aparecer em um currículo?",a:["Relato detalhado da infância","Opiniões sobre todos os antigos professores","Formação, experiências e habilidades","Uma narrativa literária fictícia"],k:2,e:"O currículo resume dados de formação, experiências, cursos e competências."},
+ {c:"INGLÊS",q:"I am late, _____?",a:["am I?","aren't I?","don't I?","isn't I?"],k:1,e:"A forma especial da tag para I am é aren't I?"},
+ {c:"PORTUGUÊS",q:"O Quinze, romance sobre a seca de 1915, foi escrito por:",a:["Rachel de Queiroz","Clarice Lispector","Cecília Meireles","Lygia Fagundes Telles"],k:0,e:"O Quinze é de Rachel de Queiroz e retrata os efeitos da seca no Ceará."},
+ {c:"INGLÊS",q:"She has finished her homework, _____?",a:["doesn't she?","hasn't she?","isn't she?","didn't she?"],k:1,e:"Has finished está no present perfect; a tag usa has na forma negativa."},
+ {c:"PORTUGUÊS",q:"Assinale a frase em que o uso da crase está INCORRETO.",a:["Voltei à cidade.","Obedeço à professora.","Vou à Salvador amanhã.","Cheguei às oito horas."],k:2,e:"Salvador normalmente não admite artigo: 'vou a Salvador', sem crase."},
+ {c:"INGLÊS",q:"Nobody called you, _____?",a:["didn't they?","did they?","do they?","weren't they?"],k:1,e:"Nobody tem sentido negativo; por isso, a tag é positiva: did they?"},
+ {c:"PORTUGUÊS",q:"Qual tema é frequente na segunda fase do Modernismo?",a:["Somente aventuras medievais","Seca, desigualdade e vida regional","Mitologia greco-romana exclusivamente","Exaltação da corte portuguesa"],k:1,e:"A prosa de 1930 frequentemente retrata problemas sociais e realidades regionais."},
+ {c:"INGLÊS",q:"You will help me tomorrow, _____?",a:["will you?","won't you?","don't you?","aren't you?"],k:1,e:"Will é o auxiliar; como a frase é afirmativa, a tag fica won't you?"},
+ {c:"PORTUGUÊS",q:"Complete: 'Os alunos chegaram ___ escola e começaram ___ estudar.'",a:["a – à","à – a","à – à","a – a"],k:1,e:"'Chegaram à escola' tem crase; antes do verbo estudar, não há crase."}
+];
+
+const $ = id => document.getElementById(id);
+let auth, db, uid, roomRef, roomCode, roomData, unsubscribe = null, isHost = false, busy = false;
+function show(id){["setup","lobby","game","result"].forEach(x=>$(x).classList.toggle("hidden",x!==id));}
+function msg(t, cls=""){ $("setupMsg").textContent=t; $("setupMsg").className="notice small "+cls; }
+function cleanName(){return $("playerName").value.trim().slice(0,18)||"Jogador";}
+function makeCode(){return Math.random().toString(36).slice(2,8).toUpperCase();}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function playersOf(data){return Object.entries(data?.players||{}).map(([id,p])=>({id,...p}));}
+function playerCards(data,target){const ps=playersOf(data);$(target).innerHTML=ps.map(p=>`<div class="player"><strong>${escapeHtml(p.name)}</strong><div class="score">${p.score||0} pts</div><span class="small muted">${p.id===uid?"Você":(p.ready?"Conectado":"Na sala")}</span></div>`).join("");}
+function validConfig(){return firebaseConfig.apiKey!=="COLOQUE_SUA_API_KEY" && firebaseConfig.projectId!=="SEU-PROJETO";}
+async function connect(){
+  if(!validConfig()) throw new Error("Falta configurar o Firebase. Abra o README e siga os passos.");
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  auth=firebase.auth();db=firebase.database();
+  const cred=await auth.signInAnonymously();uid=cred.user.uid;
+}
+async function createRoom(){
+  try{msg("Conectando...");await connect();isHost=true;roomCode=makeCode();roomRef=db.ref("rooms/"+roomCode);
+    await roomRef.set({status:"lobby",host:uid,current:0,players:{[uid]:{name:cleanName(),score:0,ready:true}},answers:{},createdAt:Date.now()});
+    enterRoom();
+  }catch(e){msg(e.message,"error");}
+}
+async function joinRoom(){
+  try{msg("Entrando...");await connect();isHost=false;roomCode=$("roomCode").value.trim().toUpperCase();if(!/^[A-Z0-9]{6}$/.test(roomCode))throw new Error("Digite um código válido de 6 caracteres.");
+    roomRef=db.ref("rooms/"+roomCode);const snap=await roomRef.once("value");if(!snap.exists())throw new Error("Sala não encontrada. Confira o código.");
+    const data=snap.val();if(data.status!=="lobby")throw new Error("Essa partida já começou.");if(playersOf(data).length>=2)throw new Error("Essa sala já está cheia.");
+    await roomRef.child("players/"+uid).set({name:cleanName(),score:0,ready:true});enterRoom();
+  }catch(e){msg(e.message,"error");}
+}
+function enterRoom(){
+  show("lobby");$("roomCodeDisplay").textContent=roomCode;
+  if(unsubscribe)roomRef.off("value",unsubscribe);
+  unsubscribe=snap=>{roomData=snap.val();if(!roomData){msg("A sala foi encerrada.","error");show("setup");return;}renderRoom();};
+  roomRef.on("value",unsubscribe);
+}
+function renderRoom(){
+  if(!roomData)return;
+  if(roomData.status==="finished"){renderResults();return;}
+  if(roomData.status==="playing"){show("game");renderGame();return;}
+  show("lobby");playerCards(roomData,"lobbyPlayers");
+  const count=playersOf(roomData).length;$("lobbyStatus").textContent=count===2?"Os dois jogadores estão prontos. O anfitrião pode iniciar!":"Esperando seu amigo entrar...";
+  $("startBtn").classList.toggle("hidden",!(isHost&&count===2));
+}
+async function startGame(){
+  if(!isHost||playersOf(roomData).length!==2)return;
+  await roomRef.update({status:"playing",current:0,answers:{},startedAt:Date.now()});
+}
+function renderGame(){
+  const idx=roomData.current||0;if(idx>=QUESTIONS.length){renderResults();return;}
+  const q=QUESTIONS[idx],myAnswer=roomData.answers?.[idx]?.[uid];
+  $("roundLabel").textContent=`Questão ${idx+1}/${QUESTIONS.length}`;$("categoryLabel").textContent=q.c;
+  $("progress").style.width=((idx)/QUESTIONS.length*100)+"%";$("questionText").textContent=q.q;
+  $("answerButtons").innerHTML=q.a.map((a,i)=>`<button data-answer="${i}" ${myAnswer!==undefined?"disabled":""}>${String.fromCharCode(65+i)}) ${escapeHtml(a)}</button>`).join("");
+  [...$("answerButtons").querySelectorAll("button")].forEach(b=>b.addEventListener("click",()=>sendAnswer(Number(b.dataset.answer))));
+  const answers=roomData.answers?.[idx]||{};const count=Object.keys(answers).length;
+  $("answerStatus").textContent=myAnswer!==undefined?`Resposta enviada. ${count}/2 jogadores responderam.`:`Responda! ${count}/2 jogadores já responderam.`;
+  playerCards(roomData,"gamePlayers");
+}
+async function sendAnswer(choice){
+  if(busy||!roomData||roomData.answers?.[roomData.current]?.[uid]!==undefined)return;busy=true;
+  const idx=roomData.current;const q=QUESTIONS[idx];
+  await roomRef.child(`answers/${idx}/${uid}`).set({choice,correct:choice===q.k,at:Date.now()});
+  busy=false;
+}
+let advancing=false;
+async function maybeAdvance(){
+  if(!isHost||!roomData||roomData.status!=="playing"||advancing)return;
+  const idx=roomData.current||0, answers=roomData.answers?.[idx]||{};
+  if(Object.keys(answers).length<2)return;
+  advancing=true;
+  try{
+    const updates={};
+    for(const [pid,a] of Object.entries(answers)){if(a.correct)updates[`players/${pid}/score`]=(roomData.players?.[pid]?.score||0)+10;}
+    if(Object.keys(updates).length)await roomRef.update(updates);
+    await new Promise(r=>setTimeout(r,1100));
+    const fresh=(await roomRef.once("value")).val();
+    if(fresh.status==="playing"&&fresh.current===idx&&Object.keys(fresh.answers?.[idx]||{}).length===2){
+      if(idx+1>=QUESTIONS.length)await roomRef.update({status:"finished"});
+      else await roomRef.update({current:idx+1});
+    }
+  }finally{advancing=false;}
+}
+function renderResults(){
+  show("result");$("progress").style.width="100%";const ps=playersOf(roomData).sort((a,b)=>(b.score||0)-(a.score||0));
+  $("winnerText").textContent=ps[0]?.score===ps[1]?.score?"Empate! Mandaram bem demais.":`🏆 ${ps[0]?.name} venceu!`;
+  $("finalPlayers").innerHTML=ps.map((p,i)=>`<div class="player"><strong>${i===0?"🥇 ":"🥈 "}${escapeHtml(p.name)}</strong><div class="score">${p.score||0} pts</div></div>`).join("");
+}
+async function leaveRoom(){
+  try{if(roomRef&&uid)await roomRef.child("players/"+uid).remove();if(unsubscribe&&roomRef)roomRef.off("value",unsubscribe);}catch(e){}
+  roomRef=null;roomData=null;roomCode=null;unsubscribe=null;isHost=false;show("setup");msg("Crie uma sala e envie o código ao seu amigo.");
+}
+$("createBtn").onclick=createRoom;$("showJoinBtn").onclick=()=>$("joinArea").classList.toggle("hidden");$("joinBtn").onclick=joinRoom;
+$("startBtn").onclick=startGame;$("leaveBtn").onclick=leaveRoom;$("backBtn").onclick=leaveRoom;
+$("copyBtn").onclick=async()=>{try{await navigator.clipboard.writeText(roomCode);$("copyBtn").textContent="Código copiado!";}catch(e){$("copyBtn").textContent="Código: "+roomCode;}};
+$("roomCode").addEventListener("input",e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,6));
+setInterval(()=>{if(isHost&&roomData?.status==="playing")maybeAdvance();},700);
+</script>
+</body>
+</html>
