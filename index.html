@@ -38,6 +38,13 @@
     .side-body ul{padding-left:18px;margin:8px 0}
     .side-body li{margin:6px 0}
     .side-body b{color:#c5d4f5}
+    .topic-list{display:grid;gap:8px;margin-bottom:14px}
+    .topic-btn{margin:0;text-align:left;background:#1a243a;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;font-weight:600;cursor:pointer}
+    .topic-btn.active{border-color:var(--blue);background:#1a2d52;color:#9fc9ff}
+    .topic-panel{margin-top:8px;padding-top:4px;border-top:1px solid var(--line)}
+    .answers button.selected{border-color:var(--blue);background:#263d66}
+    .answers button:focus{outline:none}
+    .answers button:focus-visible{outline:2px solid var(--blue)}
 
     /* Feedback CERTO / ERROU */
     .feedback-overlay{
@@ -105,44 +112,69 @@
       <button type="button" id="closeMenuBtn" class="menu-btn">✕</button>
     </div>
     <div class="side-body">
-      <h3>🇬🇧 Inglês — Tag Questions</h3>
-      <p>Tag questions confirmam algo dito antes. A tag usa o <b>auxiliar</b> da frase principal e inverte afirmativo/negativo.</p>
-      <p><b>DO / DOES / DID</b></p>
-      <ul>
-        <li><b>do</b> — presente, I/you/we/they: You like pizza, <b>don't you?</b></li>
-        <li><b>does</b> — presente, he/she/it: She works here, <b>doesn't she?</b></li>
-        <li><b>did</b> — passado simples: They went home, <b>didn't they?</b></li>
-      </ul>
-      <p>Se a frase é negativa, a tag fica positiva: You <b>don't</b> like coffee, <b>do you?</b></p>
-      <p><b>Outros auxiliares</b> (repetem na tag): be (am/is/are/was/were), have/has/had, will, can, could, should, must...</p>
-      <p><b>Exceções importantes</b></p>
-      <ul>
-        <li><b>I am</b> → tag: <b>aren't I?</b></li>
-        <li><b>Let's</b> → tag: <b>shall we?</b></li>
-        <li>Imperativo → <b>will you?</b> / won't you?</li>
-        <li>Nobody / everybody → usam <b>they</b> na tag</li>
-        <li>There is/are → tag com <b>there</b></li>
-      </ul>
+      <p class="small muted" style="margin-top:0">Escolha um assunto:</p>
+      <div class="topic-list" id="topicList">
+        <button type="button" class="topic-btn" data-topic="tags">🇬🇧 Tag Questions (visão geral)</button>
+        <button type="button" class="topic-btn" data-topic="do">🇬🇧 DO / DOES / DID</button>
+        <button type="button" class="topic-btn" data-topic="aux">🇬🇧 Auxiliares e exceções</button>
+        <button type="button" class="topic-btn" data-topic="crase">🇧🇷 Crase</button>
+        <button type="button" class="topic-btn" data-topic="mod">🇧🇷 Modernismo (1ª fase)</button>
+      </div>
 
-      <h3>🇧🇷 Português — Crase</h3>
-      <p>Crase = fusão de <b>a + a</b> (preposição + artigo ou demonstrativo), marcada com acento grave: <b>à</b>.</p>
-      <ul>
-        <li>Só antes de palavra <b>feminina</b> que admite artigo.</li>
-        <li>Teste prático: se “vou <b>a</b> X” e “venho <b>da</b> X” → use <b>à</b>.</li>
-        <li>Se “venho <b>de</b> X” → sem crase.</li>
-        <li><b>Não</b> usa crase: antes de verbo, masculino, pronomes pessoais, artigo indefinido, cidades que repelem artigo.</li>
-        <li>Facultativo: antes de possessivo feminino e nomes próprios femininos.</li>
-      </ul>
+      <div id="topic-tags" class="topic-panel hidden">
+        <h3>Tag Questions</h3>
+        <p>Servem para <b>confirmar</b> algo. A tag usa o <b>mesmo auxiliar</b> da frase e inverte: se a frase é afirmativa, a tag é negativa (e vice-versa).</p>
+        <p>Ex.: She is your sister, <b>isn't she?</b></p>
+        <p>Ex.: You don't like coffee, <b>do you?</b></p>
+      </div>
 
-      <h3>🇧🇷 Português — Modernismo (1ª fase)</h3>
-      <p>1ª fase = <b>fase heroica / primitivista</b> (por volta de 1922–1930).</p>
-      <ul>
-        <li><b>Semana de Arte Moderna</b> (fev. 1922, Teatro Municipal de São Paulo).</li>
-        <li>Autores-chave: <b>Mário de Andrade</b>, <b>Oswald de Andrade</b>, <b>Manuel Bandeira</b>, Anita Malfatti, Tarsila do Amaral (artes).</li>
-        <li>Traços: ruptura com o academicismo, liberdade formal, verso livre, humor, ironia, linguagem coloquial, nacionalismo crítico.</li>
-        <li><b>Manifesto Pau-Brasil</b> (Oswald, 1924) e <b>Manifesto Antropófago</b> (1928) — “devorar” a cultura estrangeira e criar algo brasileiro.</li>
-        <li>Obras: <i>Pauliceia Desvairada</i> (Mário), <i>Macunaíma</i> (Mário), <i>Memórias Sentimentais de João Miramar</i> (Oswald), <i>Libertinagem</i> (Bandeira).</li>
-      </ul>
+      <div id="topic-do" class="topic-panel hidden">
+        <h3>DO / DOES / DID</h3>
+        <ul>
+          <li><b>do</b> — presente com I/you/we/they → You play soccer, <b>don't you?</b></li>
+          <li><b>does</b> — presente com he/she/it → He likes tea, <b>doesn't he?</b></li>
+          <li><b>did</b> — passado simples (todos) → They went home, <b>didn't they?</b></li>
+        </ul>
+        <p>Frase negativa → tag positiva: She <b>doesn't</b> drive, <b>does she?</b></p>
+        <p>No past simple o verbo principal vira base na tag: went → <b>didn't they?</b></p>
+      </div>
+
+      <div id="topic-aux" class="topic-panel hidden">
+        <h3>Auxiliares e exceções</h3>
+        <p>Repetem na tag: <b>be</b> (am/is/are/was/were), <b>have/has/had</b>, <b>will</b>, <b>can/could</b>, <b>should</b>, <b>must</b>...</p>
+        <p><b>Exceções</b></p>
+        <ul>
+          <li><b>I am</b> → <b>aren't I?</b></li>
+          <li><b>Let's</b> → <b>shall we?</b></li>
+          <li>Imperativo → <b>will you?</b></li>
+          <li>Nobody / everybody → pronome <b>they</b> na tag</li>
+          <li>There is/are → tag com <b>there</b></li>
+        </ul>
+      </div>
+
+      <div id="topic-crase" class="topic-panel hidden">
+        <h3>Crase</h3>
+        <p>Crase = <b>a + a</b> (preposição + artigo/demonstrativo) → <b>à</b>.</p>
+        <ul>
+          <li>Só antes de palavra <b>feminina</b> que admite artigo.</li>
+          <li>Teste: “vou a X” + “venho <b>da</b> X” → use <b>à</b>.</li>
+          <li>“venho <b>de</b> X” → sem crase.</li>
+          <li><b>Sem crase:</b> verbo, masculino, pronomes pessoais (ela, mim...), artigo indefinido, muitas cidades.</li>
+          <li><b>Facultativo:</b> possessivo feminino (à minha / a minha) e nomes próprios femininos.</li>
+        </ul>
+      </div>
+
+      <div id="topic-mod" class="topic-panel hidden">
+        <h3>Modernismo — 1ª fase</h3>
+        <p><b>Fase heroica/primitivista</b> (≈ 1922–1930).</p>
+        <ul>
+          <li><b>Semana de Arte Moderna</b> — fev. 1922, Teatro Municipal de SP.</li>
+          <li>Autores: <b>Mário de Andrade</b>, <b>Oswald de Andrade</b>, <b>Manuel Bandeira</b>.</li>
+          <li>Traços: ruptura, verso livre, humor, ironia, linguagem coloquial, nacionalismo crítico.</li>
+          <li><b>Pau-Brasil</b> (1924) e <b>Antropofagia</b> (1928) — Oswald.</li>
+          <li>Obras: <i>Pauliceia Desvairada</i>, <i>Macunaíma</i>, <i>João Miramar</i>, <i>Libertinagem</i>.</li>
+        </ul>
+      </div>
     </div>
   </aside>
 
@@ -437,6 +469,8 @@ const QUESTIONS = [
 const $ = id => document.getElementById(id);
 let auth, db, uid, roomRef, roomCode, roomData, unsubscribe = null, isHost = false, busy = false;
 let timerInterval = null, localQuestionIdx = -1;
+// escolha local por índice da questão (evita vazar resposta do outro no UI)
+let localChoices = {};
 
 const LAST_USED_KEY = "quiz_battle_last_used";
 
@@ -694,10 +728,20 @@ function enterRoom(){
   roomRef.on("value",unsubscribe);
 }
 
+let lastStartedAt = null;
 function renderRoom(){
   if(!roomData)return;
   if(roomData.status==="finished"){stopTimer();renderResults();return;}
-  if(roomData.status==="playing"){show("game");renderGame();return;}
+  if(roomData.status==="playing"){
+    if(roomData.startedAt && roomData.startedAt !== lastStartedAt){
+      lastStartedAt = roomData.startedAt;
+      localChoices = {};
+      localQuestionIdx = -1;
+    }
+    show("game");
+    renderGame();
+    return;
+  }
   show("lobby");
   playerCards(roomData,"lobbyPlayers");
   const count=playersOf(roomData).length;
@@ -738,55 +782,64 @@ function renderGame(){
   }
 
   const q=qs[idx];
-  // answers[idx][uid] = { choice, correct, at }  → pegar só o número da escolha
-  const answers=roomData.answers?.[idx]||{};
-  const myData = uid ? answers[uid] : null;
-  const myChoice = (myData && typeof myData.choice === "number") ? myData.choice : undefined;
-  const hasMyAnswer = myChoice !== undefined;
+  // answers[idx] deve ser um mapa { [playerUid]: { choice, correct, at } }
+  const answersRaw = roomData.answers?.[idx] || roomData.answers?.[String(idx)] || {};
+  const answers = (answersRaw && typeof answersRaw === "object" && !Array.isArray(answersRaw)) ? answersRaw : {};
 
-  const otherId=Object.keys(roomData.players||{}).find(id=>id!==uid);
-  const otherAnswered = !!(otherId && answers[otherId] !== undefined);
-  const count = Object.keys(answers).length;
-  const bothAnswered = count >= 2;
+  // Só a resposta DESTE uid (nunca Object.values / primeira chave)
+  let myChoice = undefined;
+  if(uid && answers[uid] && typeof answers[uid] === "object" && typeof answers[uid].choice === "number"){
+    myChoice = answers[uid].choice;
+  }
+  // reforço: escolha local (clique neste aparelho)
+  if(typeof localChoices[idx] === "number"){
+    myChoice = localChoices[idx];
+  }
+  const hasMyAnswer = typeof myChoice === "number";
+
+  // adversário: só conta se a chave for outro player da sala
+  const playerIds = Object.keys(roomData.players || {});
+  const otherId = playerIds.find(id => id && id !== uid);
+  const otherAnswered = !!(otherId && answers[otherId] && typeof answers[otherId] === "object" && typeof answers[otherId].choice === "number");
+
+  // quantos jogadores da sala já responderam (ignora chaves estranhas)
+  let answeredPlayers = 0;
+  for(const pid of playerIds){
+    if(answers[pid] && typeof answers[pid] === "object" && typeof answers[pid].choice === "number") answeredPlayers++;
+  }
+  const bothAnswered = answeredPlayers >= 2;
 
   $("roundLabel").textContent=`Questão ${idx+1}/${total}`;
   $("categoryLabel").textContent=q.c;
   $("progress").style.width=((idx)/total*100)+"%";
   $("questionText").textContent=q.q;
 
-  // IMPORTANTE: só marca a escolha DO JOGADOR LOCAL.
-  // Nunca usa a escolha do adversário pra pintar botão.
-  $("answerButtons").innerHTML=q.a.map((a,i)=>{
-    let cls="";
+  // Só marca botão se ESTE jogador já escolheu. Nunca pinta a escolha do outro.
+  $("answerButtons").innerHTML = q.a.map((a,i)=>{
+    let cls = "";
     if(hasMyAnswer){
       if(i === myChoice) cls = "selected";
       if(bothAnswered){
-        if(i === q.k) cls = (cls + " correct").trim();
-        else if(i === myChoice) cls = (cls + " wrong").trim();
+        if(i === q.k) cls = "correct";
+        else if(i === myChoice) cls = "selected wrong";
       }
     }
-    const disabled = hasMyAnswer ? "disabled" : "";
-    return `<button type="button" data-answer="${i}" class="${cls}" ${disabled}>${String.fromCharCode(65+i)}) ${escapeHtml(a)}</button>`;
+    return `<button type="button" data-answer="${i}" class="${cls}" ${hasMyAnswer?"disabled":""}>${String.fromCharCode(65+i)}) ${escapeHtml(a)}</button>`;
   }).join("");
 
   [...$("answerButtons").querySelectorAll("button")].forEach(b=>{
     b.addEventListener("click",()=>sendAnswer(Number(b.dataset.answer)));
   });
 
-  // status claro sobre o adversário
   let statusHtml="";
   if(hasMyAnswer){
-    if(otherAnswered){
-      statusHtml=`<span class="status-ok">✓ Você e o adversário já responderam.</span> Aguardando próximo...`;
-    }else{
-      statusHtml=`<span class="status-ok">✓ Sua resposta foi enviada.</span> <span class="status-wait">Aguardando o adversário responder...</span>`;
-    }
+    statusHtml = otherAnswered
+      ? `<span class="status-ok">✓ Você e o adversário já responderam.</span> Aguardando próximo...`
+      : `<span class="status-ok">✓ Sua resposta foi enviada.</span> <span class="status-wait">Aguardando o adversário...</span>`;
+  }else if(otherAnswered){
+    statusHtml = `<span class="status-wait">⚠ O adversário já respondeu!</span> Responda agora.`;
   }else{
-    if(otherAnswered){
-      statusHtml=`<span class="status-wait">⚠ O adversário já respondeu!</span> Responda agora.`;
-    }else{
-      statusHtml=`Responda! Ninguém respondeu ainda.`;
-    }
+    statusHtml = `Responda! Ninguém respondeu ainda.`;
   }
   $("answerStatus").innerHTML=statusHtml;
   // últimas 3 questões: esconde placar (suspense)
@@ -796,39 +849,59 @@ function renderGame(){
 }
 
 async function sendAnswer(choice){
-  if(busy||!roomData||roomData.answers?.[roomData.current]?.[uid]!==undefined)return;
-  busy=true;
-  const idx=roomData.current;
+  if(busy || !roomData || !uid) return;
+  const idx = roomData.current;
+  // já respondido neste aparelho ou no firebase
+  if(typeof localChoices[idx] === "number") return;
+  const existing = roomData.answers?.[idx]?.[uid] || roomData.answers?.[String(idx)]?.[uid];
+  if(existing && typeof existing.choice === "number") return;
+
+  busy = true;
+  localChoices[idx] = choice; // trava visual só neste aparelho
   const qs = currentQuestions();
   const q = qs[idx];
   const isCorrect = choice === q.k;
   showFeedback(isCorrect);
+  // re-render imediato com a escolha local
+  try{ renderGame(); }catch(e){}
   try{
     await roomRef.child(`answers/${idx}/${uid}`).set({
       choice,
-      correct:isCorrect,
-      at:Date.now()
+      correct: isCorrect,
+      at: Date.now()
     });
-  }finally{busy=false;}
+  }finally{ busy = false; }
 }
 
 let advancing=false;
+function countPlayerAnswers(answersObj, playersObj){
+  const pids = Object.keys(playersObj || {});
+  let n = 0;
+  for(const pid of pids){
+    const a = answersObj && answersObj[pid];
+    if(a && typeof a === "object" && typeof a.choice === "number") n++;
+  }
+  return n;
+}
+
 async function maybeAdvance(){
   if(!isHost||!roomData||roomData.status!=="playing"||advancing)return;
   const idx=roomData.current||0;
-  const answers=roomData.answers?.[idx]||{};
-  if(Object.keys(answers).length<2)return;
+  const answers=roomData.answers?.[idx]||roomData.answers?.[String(idx)]||{};
+  if(countPlayerAnswers(answers, roomData.players)<2)return;
   advancing=true;
   try{
     const updates={};
-    for(const [pid,a] of Object.entries(answers)){
-      if(a.correct) updates[`players/${pid}/score`]=(roomData.players?.[pid]?.score||0)+10;
+    for(const pid of Object.keys(roomData.players||{})){
+      const a = answers[pid];
+      if(a && a.correct) updates[`players/${pid}/score`]=(roomData.players?.[pid]?.score||0)+10;
     }
     if(Object.keys(updates).length) await roomRef.update(updates);
     await new Promise(r=>setTimeout(r,1200));
     const fresh=(await roomRef.once("value")).val();
     const total = toArray(fresh.selectedQuestions).length || fresh.qCount || QUESTIONS_PER_ROUND_DEFAULT;
-    if(fresh.status==="playing"&&fresh.current===idx&&Object.keys(fresh.answers?.[idx]||{}).length===2){
+    const freshAnswers = fresh.answers?.[idx]||fresh.answers?.[String(idx)]||{};
+    if(fresh.status==="playing"&&fresh.current===idx&&countPlayerAnswers(freshAnswers, fresh.players)>=2){
       if(idx+1>=total) await roomRef.update({status:"finished"});
       else await roomRef.update({current:idx+1, questionStartedAt:Date.now()});
     }
@@ -884,6 +957,7 @@ async function leaveRoom(){
     if(unsubscribe&&roomRef) roomRef.off("value",unsubscribe);
   }catch(e){}
   roomRef=null;roomData=null;roomCode=null;unsubscribe=null;isHost=false;localQuestionIdx=-1;
+  localChoices = {};
   show("setup");
   msg("Crie uma sala e envie o código ao seu amigo.");
 }
@@ -931,6 +1005,17 @@ function closeMenu(){
 $("menuBtn").onclick=openMenu;
 $("closeMenuBtn").onclick=closeMenu;
 $("sideOverlay").onclick=closeMenu;
+
+document.querySelectorAll(".topic-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const id = btn.dataset.topic;
+    document.querySelectorAll(".topic-btn").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".topic-panel").forEach(p=>p.classList.add("hidden"));
+    btn.classList.add("active");
+    const panel = $("topic-"+id);
+    if(panel) panel.classList.remove("hidden");
+  });
+});
 
 setInterval(()=>{if(isHost&&roomData?.status==="playing")maybeAdvance();},600);
 </script>
