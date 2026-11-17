@@ -28,21 +28,22 @@
     /* Feedback CERTO / ERROU */
     .feedback-overlay{
       position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
-      pointer-events:none;z-index:9999;opacity:0;transition:opacity .15s;
+      pointer-events:none;z-index:99999;opacity:0;transition:opacity .12s;
+      background:rgba(0,0,0,.35);
     }
     .feedback-overlay.show{opacity:1}
     .feedback-overlay .burst{
-      font-size:clamp(48px,14vw,92px);font-weight:900;letter-spacing:4px;
-      text-transform:uppercase;padding:18px 36px;border-radius:24px;
-      transform:scale(.4);animation:popIn .8s cubic-bezier(.2,1.4,.4,1) forwards;
-      text-shadow:0 8px 30px #000a;
+      font-size:clamp(52px,16vw,100px);font-weight:900;letter-spacing:6px;
+      text-transform:uppercase;padding:22px 40px;border-radius:28px;
+      transform:scale(.35);animation:popIn .8s cubic-bezier(.2,1.5,.35,1) forwards;
+      text-shadow:0 10px 40px #000c;
     }
-    .feedback-overlay.correct .burst{color:#42d392;background:rgba(18,61,53,.92);border:3px solid #42d392;box-shadow:0 0 60px #42d39266}
-    .feedback-overlay.wrong .burst{color:#ff7185;background:rgba(72,36,49,.92);border:3px solid #ff7185;box-shadow:0 0 60px #ff718566}
+    .feedback-overlay.correct .burst{color:#42d392;background:rgba(18,61,53,.95);border:4px solid #42d392;box-shadow:0 0 80px #42d39288}
+    .feedback-overlay.wrong .burst{color:#ff7185;background:rgba(72,36,49,.95);border:4px solid #ff7185;box-shadow:0 0 80px #ff718588}
     @keyframes popIn{
-      0%{transform:scale(.3) rotate(-8deg);opacity:0}
-      40%{transform:scale(1.15) rotate(3deg);opacity:1}
-      70%{transform:scale(.95) rotate(-2deg)}
+      0%{transform:scale(.25) rotate(-10deg);opacity:0}
+      35%{transform:scale(1.2) rotate(4deg);opacity:1}
+      65%{transform:scale(.92) rotate(-2deg)}
       100%{transform:scale(1) rotate(0);opacity:1}
     }
 
@@ -366,11 +367,23 @@ function pickQuestionsForRound(){
   return clean;
 }
 
+// Firebase às vezes devolve array como objeto {0:...,1:...}
+function toArray(val){
+  if(Array.isArray(val)) return val;
+  if(val && typeof val === "object"){
+    return Object.keys(val).sort((a,b)=>Number(a)-Number(b)).map(k=>val[k]);
+  }
+  return [];
+}
+
 function currentQuestions(){
-  // usa as questões sorteadas da sala; fallback pro array global se não tiver
-  return (roomData && Array.isArray(roomData.selectedQuestions) && roomData.selectedQuestions.length)
-    ? roomData.selectedQuestions
-    : QUESTIONS;
+  const selected = toArray(roomData && roomData.selectedQuestions);
+  return selected.length ? selected : QUESTIONS;
+}
+
+function roundTotal(){
+  const selected = toArray(roomData && roomData.selectedQuestions);
+  return selected.length || QUESTIONS_PER_ROUND;
 }
 
 function show(id){["setup","lobby","game","result"].forEach(x=>$(x).classList.toggle("hidden",x!==id));}
@@ -387,13 +400,20 @@ function playerCards(data,target,hideScores=false){
 function showFeedback(correct){
   const ov=$("feedbackOverlay");
   const tx=$("feedbackText");
+  if(!ov||!tx) return;
   ov.classList.remove("correct","wrong","show");
-  void ov.offsetWidth; // force reflow
+  // reinicia animação
+  const burst = ov.querySelector(".burst");
+  if(burst){
+    burst.style.animation = "none";
+    void burst.offsetWidth;
+    burst.style.animation = "";
+  }
   ov.classList.add(correct?"correct":"wrong");
-  tx.textContent=correct?"CERTO!":"ERROU!";
+  tx.textContent = correct ? "CERTO!" : "ERROU!";
   ov.classList.add("show");
   clearTimeout(showFeedback._t);
-  showFeedback._t=setTimeout(()=>ov.classList.remove("show"),800);
+  showFeedback._t = setTimeout(()=>ov.classList.remove("show"), 850);
 }
 function validConfig(){return firebaseConfig.apiKey!=="COLOQUE_SUA_API_KEY" && firebaseConfig.projectId!=="SEU-PROJETO";}
 
@@ -439,7 +459,7 @@ async function forceAdvanceOnTimeout(){
     if(Object.keys(updates).length) await roomRef.update(updates);
     await new Promise(r=>setTimeout(r,800));
     const fresh=(await roomRef.once("value")).val();
-    const total = (fresh.selectedQuestions && fresh.selectedQuestions.length) || QUESTIONS_PER_ROUND;
+    const total = toArray(fresh.selectedQuestions).length || QUESTIONS_PER_ROUND;
     if(fresh.status==="playing"&&fresh.current===idx){
       if(idx+1>=total) await roomRef.update({status:"finished"});
       else await roomRef.update({current:idx+1, questionStartedAt:Date.now(), answers:{...(fresh.answers||{}), [idx]: answers}});
@@ -623,7 +643,7 @@ async function maybeAdvance(){
     if(Object.keys(updates).length) await roomRef.update(updates);
     await new Promise(r=>setTimeout(r,1200));
     const fresh=(await roomRef.once("value")).val();
-    const total = (fresh.selectedQuestions && fresh.selectedQuestions.length) || QUESTIONS_PER_ROUND;
+    const total = toArray(fresh.selectedQuestions).length || QUESTIONS_PER_ROUND;
     if(fresh.status==="playing"&&fresh.current===idx&&Object.keys(fresh.answers?.[idx]||{}).length===2){
       if(idx+1>=total) await roomRef.update({status:"finished"});
       else await roomRef.update({current:idx+1, questionStartedAt:Date.now()});
