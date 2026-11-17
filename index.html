@@ -24,6 +24,20 @@
     .notice{padding:12px;border-radius:12px;background:#0d1729;border:1px solid var(--line);color:var(--muted);margin-top:12px}.error{color:#ff9cab}.success{color:#7ee6b5}.center{text-align:center}.code{font-size:28px;letter-spacing:6px;font-weight:900;color:#9fc9ff}
     .status-ok{color:#7ee6b5}.status-wait{color:#ffd166}
     footer{text-align:center;color:#73809b;font-size:12px;margin-top:22px}
+    .opt-btn{margin-top:0;padding:10px 8px;font-size:13px}
+    .opt-btn.selected{border-color:var(--blue)!important;background:#1a2d52!important;color:#9fc9ff}
+    .brand{position:relative}
+    .menu-btn{position:absolute;left:0;top:8px;width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:18px;cursor:pointer;padding:0;margin:0}
+    .side-overlay{position:fixed;inset:0;background:#0008;z-index:10000}
+    .side-menu{position:fixed;top:0;left:0;bottom:0;width:min(360px,92vw);background:#121a2e;border-right:1px solid var(--line);z-index:10001;transform:translateX(-105%);transition:transform .25s ease;display:flex;flex-direction:column}
+    .side-menu.open{transform:translateX(0)}
+    .side-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
+    .side-head .menu-btn{position:static}
+    .side-body{padding:16px;overflow:auto;font-size:14px;line-height:1.55;color:var(--muted)}
+    .side-body h3{color:var(--text);margin:18px 0 8px;font-size:16px}
+    .side-body ul{padding-left:18px;margin:8px 0}
+    .side-body li{margin:6px 0}
+    .side-body b{color:#c5d4f5}
 
     /* Feedback CERTO / ERROU */
     .feedback-overlay{
@@ -78,12 +92,81 @@
 </head>
 <body>
 <div class="wrap">
-  <header class="brand"><div class="logo">⚔️</div><h1>Quiz Battle</h1><p>Inglês vs Português · Duelo de conhecimento</p></header>
+  <header class="brand">
+    <button type="button" id="menuBtn" class="menu-btn" title="Revisão">☰</button>
+    <div class="logo">⚔️</div><h1>Quiz Battle</h1><p>Inglês vs Português · Duelo de conhecimento</p>
+  </header>
+
+  <!-- Menu lateral de revisão -->
+  <div id="sideOverlay" class="side-overlay hidden"></div>
+  <aside id="sideMenu" class="side-menu" aria-hidden="true">
+    <div class="side-head">
+      <strong>📚 Modo Revisão</strong>
+      <button type="button" id="closeMenuBtn" class="menu-btn">✕</button>
+    </div>
+    <div class="side-body">
+      <h3>🇬🇧 Inglês — Tag Questions</h3>
+      <p>Tag questions confirmam algo dito antes. A tag usa o <b>auxiliar</b> da frase principal e inverte afirmativo/negativo.</p>
+      <p><b>DO / DOES / DID</b></p>
+      <ul>
+        <li><b>do</b> — presente, I/you/we/they: You like pizza, <b>don't you?</b></li>
+        <li><b>does</b> — presente, he/she/it: She works here, <b>doesn't she?</b></li>
+        <li><b>did</b> — passado simples: They went home, <b>didn't they?</b></li>
+      </ul>
+      <p>Se a frase é negativa, a tag fica positiva: You <b>don't</b> like coffee, <b>do you?</b></p>
+      <p><b>Outros auxiliares</b> (repetem na tag): be (am/is/are/was/were), have/has/had, will, can, could, should, must...</p>
+      <p><b>Exceções importantes</b></p>
+      <ul>
+        <li><b>I am</b> → tag: <b>aren't I?</b></li>
+        <li><b>Let's</b> → tag: <b>shall we?</b></li>
+        <li>Imperativo → <b>will you?</b> / won't you?</li>
+        <li>Nobody / everybody → usam <b>they</b> na tag</li>
+        <li>There is/are → tag com <b>there</b></li>
+      </ul>
+
+      <h3>🇧🇷 Português — Crase</h3>
+      <p>Crase = fusão de <b>a + a</b> (preposição + artigo ou demonstrativo), marcada com acento grave: <b>à</b>.</p>
+      <ul>
+        <li>Só antes de palavra <b>feminina</b> que admite artigo.</li>
+        <li>Teste prático: se “vou <b>a</b> X” e “venho <b>da</b> X” → use <b>à</b>.</li>
+        <li>Se “venho <b>de</b> X” → sem crase.</li>
+        <li><b>Não</b> usa crase: antes de verbo, masculino, pronomes pessoais, artigo indefinido, cidades que repelem artigo.</li>
+        <li>Facultativo: antes de possessivo feminino e nomes próprios femininos.</li>
+      </ul>
+
+      <h3>🇧🇷 Português — Modernismo (1ª fase)</h3>
+      <p>1ª fase = <b>fase heroica / primitivista</b> (por volta de 1922–1930).</p>
+      <ul>
+        <li><b>Semana de Arte Moderna</b> (fev. 1922, Teatro Municipal de São Paulo).</li>
+        <li>Autores-chave: <b>Mário de Andrade</b>, <b>Oswald de Andrade</b>, <b>Manuel Bandeira</b>, Anita Malfatti, Tarsila do Amaral (artes).</li>
+        <li>Traços: ruptura com o academicismo, liberdade formal, verso livre, humor, ironia, linguagem coloquial, nacionalismo crítico.</li>
+        <li><b>Manifesto Pau-Brasil</b> (Oswald, 1924) e <b>Manifesto Antropófago</b> (1928) — “devorar” a cultura estrangeira e criar algo brasileiro.</li>
+        <li>Obras: <i>Pauliceia Desvairada</i> (Mário), <i>Macunaíma</i> (Mário), <i>Memórias Sentimentais de João Miramar</i> (Oswald), <i>Libertinagem</i> (Bandeira).</li>
+      </ul>
+    </div>
+  </aside>
 
   <section id="setup" class="card">
     <h2>Entre na batalha</h2>
     <label for="playerName">Seu nome</label><input id="playerName" maxlength="18" placeholder="Ex.: Dgamer">
-    <div class="row">
+
+    <label>Número de questões</label>
+    <div class="row" id="qCountRow">
+      <button type="button" class="secondary opt-btn selected" data-qcount="5">5</button>
+      <button type="button" class="secondary opt-btn" data-qcount="10">10</button>
+      <button type="button" class="secondary opt-btn" data-qcount="20">20</button>
+    </div>
+
+    <label>Dificuldade</label>
+    <div class="row" style="grid-template-columns:1fr 1fr;gap:8px" id="diffRow">
+      <button type="button" class="secondary opt-btn selected" data-diff="progressiva">Progressiva</button>
+      <button type="button" class="secondary opt-btn" data-diff="facil">Fácil</button>
+      <button type="button" class="secondary opt-btn" data-diff="media">Média</button>
+      <button type="button" class="secondary opt-btn" data-diff="dificil">Difícil</button>
+    </div>
+    <p class="small muted" style="margin:8px 0 0">Progressiva: começa fácil e fica mais difícil ao longo da partida.</p>
+
+    <div class="row" style="margin-top:8px">
       <button id="createBtn">＋ Criar sala</button>
       <button id="showJoinBtn" class="secondary">Entrar com código</button>
     </div>
@@ -149,7 +232,9 @@ const firebaseConfig = {
 };
 
 const QUESTION_TIME = 180; // 3 minutos em segundos
-const QUESTIONS_PER_ROUND = 10;
+const QUESTIONS_PER_ROUND_DEFAULT = 10;
+let selectedQCount = 5;
+let selectedDiff = "progressiva";
 
 const QUESTIONS = [
   // ===== TAG QUESTIONS (INGLÊS) =====
@@ -320,7 +405,33 @@ const QUESTIONS = [
   {c:"PORTUGUÊS",q:"'referente aquele prédio' – crase?",a:["Sim (àquele)","Não","Facultativo","Só no plural"],k:0,e:"Referente a + aquele → àquele."},
   {c:"PORTUGUÊS",q:"'Rezemos um terço a Nossa Senhora' – crase?",a:["Não","Sim","Facultativo","Só com 'à'"],k:0,e:"Antes de nomes de santos/Nossa Senhora costuma-se sem (ou facultativo em alguns casos)."},
   {c:"PORTUGUÊS",q:"'Peço a senhora a fineza...' – crase?",a:["Sim (à senhora)","Não","Facultativo","Só no plural"],k:0,e:"À senhora (exceção clássica)."},
-  {c:"PORTUGUÊS",q:"'Vocês compraram aqueles livros' – crase?",a:["Não","Sim (àqueles)","Facultativo","Só no singular"],k:0,e:"Sem preposição 'a' exigida → sem crase."}
+  {c:"PORTUGUÊS",q:"'Vocês compraram aqueles livros' – crase?",a:["Não","Sim (àqueles)","Facultativo","Só no singular"],k:0,e:"Sem preposição 'a' exigida → sem crase."},
+
+  // ===== MODERNISMO 1ª FASE (nível EM 2º ano) =====
+  {c:"MODERNISMO",q:"Em que ano ocorreu a Semana de Arte Moderna?",a:["1912","1922","1930","1945"],k:1,e:"A Semana de Arte Moderna foi em fevereiro de 1922, no Teatro Municipal de São Paulo.",d:1},
+  {c:"MODERNISMO",q:"A 1ª fase do Modernismo brasileiro também é chamada de:",a:["Fase heroica ou primitivista","Geração de 45","Fase intimista","Realismo crítico"],k:0,e:"A primeira fase (c. 1922–1930) é a heroica/primitivista.",d:1},
+  {c:"MODERNISMO",q:"Qual autor escreveu Macunaíma?",a:["Oswald de Andrade","Manuel Bandeira","Mário de Andrade","Cassiano Ricardo"],k:2,e:"Macunaíma (1928) é de Mário de Andrade.",d:1},
+  {c:"MODERNISMO",q:"O Manifesto Antropófago é de:",a:["Mário de Andrade","Oswald de Andrade","Manuel Bandeira","Graça Aranha"],k:1,e:"Oswald de Andrade publicou o Manifesto Antropófago em 1928.",d:1},
+  {c:"MODERNISMO",q:"Uma característica central da 1ª fase modernista é:",a:["Rigor formal parnasiano","Ruptura com o academicismo e liberdade formal","Imitação do Arcadismo","Exclusivo soneto alexandrino"],k:1,e:"A fase heroica valoriza ruptura, verso livre e experimentação.",d:1},
+  {c:"MODERNISMO",q:"Pauliceia Desvairada é obra de:",a:["Oswald de Andrade","Mário de Andrade","Manuel Bandeira","Menotti Del Picchia"],k:1,e:"Pauliceia Desvairada (1922) marca a poesia de Mário de Andrade.",d:2},
+  {c:"MODERNISMO",q:"O Manifesto Pau-Brasil (1924) defende principalmente:",a:["Cópia da literatura europeia","Poesia de exportação e valorização do nacional","Retorno ao romantismo indianista","Rejeição total de qualquer humor"],k:1,e:"Oswald propõe uma poesia brasileira “para exportação”, com base nacional.",d:2},
+  {c:"MODERNISMO",q:"“Tupi or not tupi that is the question” aparece no contexto de:",a:["Parnasianismo","Antropofagia modernista","Simbolismo","Naturalismo"],k:1,e:"A frase sintetiza a ideia antropofágica de Oswald.",d:2},
+  {c:"MODERNISMO",q:"Manuel Bandeira, na 1ª fase, destaca-se por:",a:["Romances regionalistas longos","Poesia com liberdade formal e tom coloquial","Teatro de tese naturalista","Crônicas exclusivamente políticas"],k:1,e:"Bandeira une modernidade, oralidade e temas do cotidiano.",d:2},
+  {c:"MODERNISMO",q:"A Semana de 22 aconteceu principalmente em:",a:["Rio de Janeiro","São Paulo","Recife","Belo Horizonte"],k:1,e:"Teatro Municipal de São Paulo.",d:1},
+  {c:"MODERNISMO",q:"Qual NÃO é traço típico da 1ª fase modernista?",a:["Verso livre","Humor e ironia","Obediência rígida às regras parnasianas","Linguagem próxima da fala"],k:2,e:"A 1ª fase rejeita o formalismo parnasiano rígido.",d:1},
+  {c:"MODERNISMO",q:"Macunaíma, o herói sem nenhum caráter, representa:",a:["O cavaleiro medieval","Uma síntese crítica do brasileiro e da cultura nacional","O ideal parnasiano de perfeição","Apenas um relato realista do sertão"],k:1,e:"A rapsódia de Mário mistura mitos, regionalismos e crítica cultural.",d:2},
+  {c:"MODERNISMO",q:"Oswald de Andrade é autor de:",a:["Vidas Secas","Memórias Sentimentais de João Miramar","O Quinze","Capitães da Areia"],k:1,e:"João Miramar (1924) é marco da prosa oswaldiana.",d:2},
+  {c:"MODERNISMO",q:"A antropofagia cultural modernista propõe:",a:["Isolamento total do Brasil","“Devorar” influências estrangeiras e transformá-las em algo brasileiro","Copiar só modelos franceses","Negar qualquer arte popular"],k:1,e:"Devorar + digerir = criação nacional crítica.",d:2},
+  {c:"MODERNISMO",q:"Libertinagem (1930) é livro de poemas de:",a:["Mário de Andrade","Oswald de Andrade","Manuel Bandeira","Raul Bopp"],k:2,e:"Libertinagem reúne poemas célebres de Bandeira, como “Pneumotórax”.",d:2},
+  {c:"MODERNISMO",q:"O período aproximado da 1ª fase modernista no Brasil é:",a:["1890–1900","1922–1930","1930–1945","1945–1960"],k:1,e:"Da Semana de 22 até cerca de 1930.",d:1},
+  {c:"MODERNISMO",q:"Na pintura, artista ligada ao grupo modernista de 22:",a:["Tarsila do Amaral","Anita Malfatti apenas no século XIX","Somente Portinari na 1ª fase","Debret"],k:0,e:"Tarsila e Anita Malfatti estão no núcleo modernista (Anita já em 1917).",d:2},
+  {c:"MODERNISMO",q:"A linguagem da 1ª fase costuma ser:",a:["Apenas latim e português arcaico","Coloquial, com humor e experimentação","Exclusivamente soneto clássico","Só descrições naturalistas longas"],k:1,e:"Oralidade, irreverência e experimentação marcam a fase.",d:1},
+  {c:"MODERNISMO",q:"“Os Sapos” de Manuel Bandeira ironiza principalmente:",a:["O romantismo indianista","O formalismo parnasiano","O teatro barroco","A prosa de Machado"],k:1,e:"O poema satiriza os “sapos” parnasianos e a forma rígida.",d:3},
+  {c:"MODERNISMO",q:"A 2ª fase modernista (anos 1930) difere da 1ª porque:",a:["Abandona totalmente a literatura","Aprofunda o romance social e regionalista","Volta ao trovadorismo medieval","Elimina qualquer tema brasileiro"],k:1,e:"A prosa de 30 enfatiza questões sociais e regionais; a 1ª fase é mais de ruptura estética.",d:3},
+  {c:"MODERNISMO",q:"Raul Bopp e o movimento antropofágico ligam-se ao livro:",a:["Cobra Norato","Vidas Secas","Dom Casmurro","Iracema"],k:0,e:"Cobra Norato é obra-prima ligada ao primitivismo/antropofagia.",d:3},
+  {c:"MODERNISMO",q:"O nacionalismo da 1ª fase modernista é sobretudo:",a:["Ufanista e acrítico como o Romantismo","Crítico, irônico e interessado no Brasil real","Apenas militarista","Somente religioso"],k:1,e:"É um nacionalismo crítico, não ufanista.",d:2},
+  {c:"MODERNISMO",q:"Qual evento simboliza o marco inicial do Modernismo no Brasil?",a:["Publicação de Os Sertões","Semana de Arte Moderna de 1922","Fundação da ABL","Independência do Brasil"],k:1,e:"A Semana de 22 é o marco simbólico.",d:1},
+  {c:"MODERNISMO",q:"Na 1ª fase, a métrica tradicional:",a:["É obrigatória em todo poema","Pode ser abandonada em favor do verso livre","É a única forma aceita pelos modernistas","Só existe no teatro"],k:1,e:"Verso livre e liberdade formal são marcas da fase.",d:1}
 ];
 
 const $ = id => document.getElementById(id);
@@ -348,26 +459,76 @@ function shuffle(arr){
   return arr;
 }
 
-// Sorteia sempre 5 INGLÊS + 5 PORTUGUÊS.
-// Evita as da rodada anterior; só repete se não tiver mais novas na categoria.
-function pickQuestionsForRound(){
+function qDiff(q){ return q.d || 2; } // 1 fácil, 2 médio, 3 difícil
+
+function filterByDifficulty(list, mode, position, total){
+  if(mode === "facil") return list.filter(q => qDiff(q) <= 1);
+  if(mode === "media") return list.filter(q => qDiff(q) === 2);
+  if(mode === "dificil") return list.filter(q => qDiff(q) >= 3);
+  // progressiva: terço fácil, terço médio, terço difícil
+  if(mode === "progressiva" && total > 0){
+    const third = total / 3;
+    let want = 2;
+    if(position < third) want = 1;
+    else if(position < 2*third) want = 2;
+    else want = 3;
+    const matched = list.filter(q => qDiff(q) === want);
+    return matched.length ? matched : list;
+  }
+  return list;
+}
+
+// Distribuição por quantidade:
+// 5  → 2 EN + 2 crase + 1 modernismo
+// 10 → 5 EN + 3 crase + 2 modernismo
+// 20 → 10 EN + 7 crase + 3 modernismo
+function compositionFor(n){
+  if(n <= 5) return {en:2, crase:2, mod:1};
+  if(n <= 10) return {en:5, crase:3, mod:2};
+  return {en:10, crase:7, mod:3};
+}
+
+function pickQuestionsForRound(count, diffMode){
+  const n = count || selectedQCount || QUESTIONS_PER_ROUND_DEFAULT;
+  const mode = diffMode || selectedDiff || "progressiva";
   const lastUsed = new Set(getLastUsedIds());
   const pool = QUESTIONS.map((q,i)=>({...q, _id:i}));
-  const half = Math.floor(QUESTIONS_PER_ROUND / 2); // 5
+  const comp = compositionFor(n);
 
-  function pickFromCategory(cat, n){
-    let available = pool.filter(q => q.c === cat && !lastUsed.has(q._id));
-    if(available.length < n){
-      // acabou as novas dessa categoria → libera todas da categoria
-      available = pool.filter(q => q.c === cat);
+  function pickCat(catNames, need){
+    const names = Array.isArray(catNames) ? catNames : [catNames];
+    let available = pool.filter(q => names.includes(q.c) && !lastUsed.has(q._id));
+    if(available.length < need) available = pool.filter(q => names.includes(q.c));
+    // se dificuldade fixa, filtra; progressiva aplica na ordem final
+    if(mode !== "progressiva"){
+      const filtered = filterByDifficulty(available, mode, 0, n);
+      if(filtered.length >= need) available = filtered;
     }
     shuffle(available);
-    return available.slice(0, n);
+    return available.slice(0, need);
   }
 
-  const eng = pickFromCategory("INGLÊS", half);
-  const pt = pickFromCategory("PORTUGUÊS", half);
-  const selected = shuffle([...eng, ...pt]); // mistura a ordem na rodada
+  let selected = [
+    ...pickCat("INGLÊS", comp.en),
+    ...pickCat("PORTUGUÊS", comp.crase),
+    ...pickCat("MODERNISMO", comp.mod)
+  ];
+
+  // completa se faltou (banco curto em alguma categoria)
+  if(selected.length < n){
+    const used = new Set(selected.map(q=>q._id));
+    let rest = pool.filter(q => !used.has(q._id));
+    shuffle(rest);
+    selected = selected.concat(rest.slice(0, n - selected.length));
+  }
+
+  selected = selected.slice(0, n);
+  shuffle(selected);
+
+  // progressiva: reordena fácil → médio → difícil
+  if(mode === "progressiva"){
+    selected.sort((a,b)=>qDiff(a)-qDiff(b));
+  }
 
   const clean = selected.map(({_id, ...rest}) => rest);
   saveLastUsedIds(selected.map(q => q._id));
@@ -390,7 +551,7 @@ function currentQuestions(){
 
 function roundTotal(){
   const selected = toArray(roomData && roomData.selectedQuestions);
-  return selected.length || QUESTIONS_PER_ROUND;
+  return selected.length || (roomData && roomData.qCount) || selectedQCount || QUESTIONS_PER_ROUND_DEFAULT;
 }
 
 function show(id){["setup","lobby","game","result"].forEach(x=>$(x).classList.toggle("hidden",x!==id));}
@@ -466,7 +627,7 @@ async function forceAdvanceOnTimeout(){
     if(Object.keys(updates).length) await roomRef.update(updates);
     await new Promise(r=>setTimeout(r,800));
     const fresh=(await roomRef.once("value")).val();
-    const total = toArray(fresh.selectedQuestions).length || QUESTIONS_PER_ROUND;
+    const total = toArray(fresh.selectedQuestions).length || fresh.qCount || QUESTIONS_PER_ROUND_DEFAULT;
     if(fresh.status==="playing"&&fresh.current===idx){
       if(idx+1>=total) await roomRef.update({status:"finished"});
       else await roomRef.update({current:idx+1, questionStartedAt:Date.now(), answers:{...(fresh.answers||{}), [idx]: answers}});
@@ -493,6 +654,8 @@ async function createRoom(){
       host:uid,
       current:0,
       questionStartedAt:null,
+      qCount: selectedQCount,
+      difficulty: selectedDiff,
       players:{[uid]:{name:cleanName(),score:0,ready:true}},
       answers:{},
       createdAt:Date.now()
@@ -538,18 +701,25 @@ function renderRoom(){
   show("lobby");
   playerCards(roomData,"lobbyPlayers");
   const count=playersOf(roomData).length;
-  $("lobbyStatus").textContent=count===2?"Os dois jogadores estão prontos. O anfitrião pode iniciar!":"Esperando seu amigo entrar...";
+  const cfg = `${roomData.qCount||10} questões · ${roomData.difficulty||"progressiva"}`;
+  $("lobbyStatus").textContent=count===2
+    ? `Os dois prontos. Modo: ${cfg}. O anfitrião pode iniciar!`
+    : `Esperando seu amigo entrar... (${cfg})`;
   $("startBtn").classList.toggle("hidden",!(isHost&&count===2));
 }
 
 async function startGame(){
   if(!isHost||playersOf(roomData).length!==2)return;
-  const selected = pickQuestionsForRound();
+  const n = roomData.qCount || selectedQCount || QUESTIONS_PER_ROUND_DEFAULT;
+  const diff = roomData.difficulty || selectedDiff || "progressiva";
+  const selected = pickQuestionsForRound(n, diff);
   await roomRef.update({
     status:"playing",
     current:0,
     answers:{},
     selectedQuestions: selected,
+    qCount: n,
+    difficulty: diff,
     questionStartedAt:Date.now(),
     startedAt:Date.now()
   });
@@ -568,28 +738,35 @@ function renderGame(){
   }
 
   const q=qs[idx];
-  const myAnswer=roomData.answers?.[idx]?.[uid];
+  // answers[idx][uid] = { choice, correct, at }  → pegar só o número da escolha
   const answers=roomData.answers?.[idx]||{};
+  const myData = uid ? answers[uid] : null;
+  const myChoice = (myData && typeof myData.choice === "number") ? myData.choice : undefined;
+  const hasMyAnswer = myChoice !== undefined;
+
   const otherId=Object.keys(roomData.players||{}).find(id=>id!==uid);
-  const otherAnswered=otherId&&answers[otherId]!==undefined;
-  const count=Object.keys(answers).length;
+  const otherAnswered = !!(otherId && answers[otherId] !== undefined);
+  const count = Object.keys(answers).length;
+  const bothAnswered = count >= 2;
 
   $("roundLabel").textContent=`Questão ${idx+1}/${total}`;
   $("categoryLabel").textContent=q.c;
   $("progress").style.width=((idx)/total*100)+"%";
   $("questionText").textContent=q.q;
 
+  // IMPORTANTE: só marca a escolha DO JOGADOR LOCAL.
+  // Nunca usa a escolha do adversário pra pintar botão.
   $("answerButtons").innerHTML=q.a.map((a,i)=>{
     let cls="";
-    if(myAnswer!==undefined){
-      if(i===myAnswer) cls="selected";
-      // opcional: mostrar certo/errado depois que ambos responderam
-      if(count>=2){
-        if(i===q.k) cls+=" correct";
-        else if(i===myAnswer) cls+=" wrong";
+    if(hasMyAnswer){
+      if(i === myChoice) cls = "selected";
+      if(bothAnswered){
+        if(i === q.k) cls = (cls + " correct").trim();
+        else if(i === myChoice) cls = (cls + " wrong").trim();
       }
     }
-    return `<button data-answer="${i}" class="${cls}" ${myAnswer!==undefined?"disabled":""}>${String.fromCharCode(65+i)}) ${escapeHtml(a)}</button>`;
+    const disabled = hasMyAnswer ? "disabled" : "";
+    return `<button type="button" data-answer="${i}" class="${cls}" ${disabled}>${String.fromCharCode(65+i)}) ${escapeHtml(a)}</button>`;
   }).join("");
 
   [...$("answerButtons").querySelectorAll("button")].forEach(b=>{
@@ -598,7 +775,7 @@ function renderGame(){
 
   // status claro sobre o adversário
   let statusHtml="";
-  if(myAnswer!==undefined){
+  if(hasMyAnswer){
     if(otherAnswered){
       statusHtml=`<span class="status-ok">✓ Você e o adversário já responderam.</span> Aguardando próximo...`;
     }else{
@@ -650,7 +827,7 @@ async function maybeAdvance(){
     if(Object.keys(updates).length) await roomRef.update(updates);
     await new Promise(r=>setTimeout(r,1200));
     const fresh=(await roomRef.once("value")).val();
-    const total = toArray(fresh.selectedQuestions).length || QUESTIONS_PER_ROUND;
+    const total = toArray(fresh.selectedQuestions).length || fresh.qCount || QUESTIONS_PER_ROUND_DEFAULT;
     if(fresh.status==="playing"&&fresh.current===idx&&Object.keys(fresh.answers?.[idx]||{}).length===2){
       if(idx+1>=total) await roomRef.update({status:"finished"});
       else await roomRef.update({current:idx+1, questionStartedAt:Date.now()});
@@ -722,6 +899,38 @@ $("copyBtn").onclick=async()=>{
   catch(e){$("copyBtn").textContent="Código: "+roomCode;}
 };
 $("roomCode").addEventListener("input",e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,6));
+
+// seletor quantidade
+document.querySelectorAll("[data-qcount]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll("[data-qcount]").forEach(b=>b.classList.remove("selected"));
+    btn.classList.add("selected");
+    selectedQCount = Number(btn.dataset.qcount)||10;
+  });
+});
+// seletor dificuldade
+document.querySelectorAll("[data-diff]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll("[data-diff]").forEach(b=>b.classList.remove("selected"));
+    btn.classList.add("selected");
+    selectedDiff = btn.dataset.diff||"progressiva";
+  });
+});
+
+// menu lateral revisão
+function openMenu(){
+  $("sideMenu").classList.add("open");
+  $("sideOverlay").classList.remove("hidden");
+  $("sideMenu").setAttribute("aria-hidden","false");
+}
+function closeMenu(){
+  $("sideMenu").classList.remove("open");
+  $("sideOverlay").classList.add("hidden");
+  $("sideMenu").setAttribute("aria-hidden","true");
+}
+$("menuBtn").onclick=openMenu;
+$("closeMenuBtn").onclick=closeMenu;
+$("sideOverlay").onclick=closeMenu;
 
 setInterval(()=>{if(isHost&&roomData?.status==="playing")maybeAdvance();},600);
 </script>
