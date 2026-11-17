@@ -340,30 +340,37 @@ function saveLastUsedIds(ids){
   try{ localStorage.setItem(LAST_USED_KEY, JSON.stringify(ids)); }catch(e){}
 }
 
-// Sorteia 10 questões evitando as da rodada anterior.
-// Só repete quando não tem mais pergunta nova disponível.
+function shuffle(arr){
+  for(let i=arr.length-1; i>0; i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// Sorteia sempre 5 INGLÊS + 5 PORTUGUÊS.
+// Evita as da rodada anterior; só repete se não tiver mais novas na categoria.
 function pickQuestionsForRound(){
   const lastUsed = new Set(getLastUsedIds());
   const pool = QUESTIONS.map((q,i)=>({...q, _id:i}));
+  const half = Math.floor(QUESTIONS_PER_ROUND / 2); // 5
 
-  // primeiro tenta só as que não foram usadas na última rodada
-  let available = pool.filter(q => !lastUsed.has(q._id));
-  if(available.length < QUESTIONS_PER_ROUND){
-    // não tem o bastante → libera todas de novo
-    available = pool.slice();
+  function pickFromCategory(cat, n){
+    let available = pool.filter(q => q.c === cat && !lastUsed.has(q._id));
+    if(available.length < n){
+      // acabou as novas dessa categoria → libera todas da categoria
+      available = pool.filter(q => q.c === cat);
+    }
+    shuffle(available);
+    return available.slice(0, n);
   }
 
-  // embaralha
-  for(let i=available.length-1; i>0; i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [available[i], available[j]] = [available[j], available[i]];
-  }
+  const eng = pickFromCategory("INGLÊS", half);
+  const pt = pickFromCategory("PORTUGUÊS", half);
+  const selected = shuffle([...eng, ...pt]); // mistura a ordem na rodada
 
-  const selected = available.slice(0, QUESTIONS_PER_ROUND);
-  // remove o _id interno antes de salvar no Firebase
   const clean = selected.map(({_id, ...rest}) => rest);
-  const usedIds = selected.map(q => q._id);
-  saveLastUsedIds(usedIds);
+  saveLastUsedIds(selected.map(q => q._id));
   return clean;
 }
 
