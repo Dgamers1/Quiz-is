@@ -24,7 +24,55 @@
     .notice{padding:12px;border-radius:12px;background:#0d1729;border:1px solid var(--line);color:var(--muted);margin-top:12px}.error{color:#ff9cab}.success{color:#7ee6b5}.center{text-align:center}.code{font-size:28px;letter-spacing:6px;font-weight:900;color:#9fc9ff}
     .status-ok{color:#7ee6b5}.status-wait{color:#ffd166}
     footer{text-align:center;color:#73809b;font-size:12px;margin-top:22px}
-    @media(max-width:520px){.card{padding:16px}.row{grid-template-columns:1fr}.question{font-size:19px}}
+
+    /* Feedback CERTO / ERROU */
+    .feedback-overlay{
+      position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+      pointer-events:none;z-index:9999;opacity:0;transition:opacity .15s;
+    }
+    .feedback-overlay.show{opacity:1}
+    .feedback-overlay .burst{
+      font-size:clamp(48px,14vw,92px);font-weight:900;letter-spacing:4px;
+      text-transform:uppercase;padding:18px 36px;border-radius:24px;
+      transform:scale(.4);animation:popIn .8s cubic-bezier(.2,1.4,.4,1) forwards;
+      text-shadow:0 8px 30px #000a;
+    }
+    .feedback-overlay.correct .burst{color:#42d392;background:rgba(18,61,53,.92);border:3px solid #42d392;box-shadow:0 0 60px #42d39266}
+    .feedback-overlay.wrong .burst{color:#ff7185;background:rgba(72,36,49,.92);border:3px solid #ff7185;box-shadow:0 0 60px #ff718566}
+    @keyframes popIn{
+      0%{transform:scale(.3) rotate(-8deg);opacity:0}
+      40%{transform:scale(1.15) rotate(3deg);opacity:1}
+      70%{transform:scale(.95) rotate(-2deg)}
+      100%{transform:scale(1) rotate(0);opacity:1}
+    }
+
+    /* Placar escondido (suspense) */
+    .score.hidden-score{visibility:hidden;position:relative}
+    .score.hidden-score::after{content:"???";visibility:visible;position:absolute;left:0;right:0;color:var(--muted);font-size:22px}
+
+    /* Pódio final */
+    .podium{display:flex;align-items:flex-end;justify-content:center;gap:12px;margin:28px 0 10px;min-height:180px}
+    .podium-place{flex:1;max-width:160px;text-align:center;opacity:0;transform:translateY(40px)}
+    .podium-place.show{animation:riseUp .7s cubic-bezier(.2,1.1,.3,1) forwards}
+    .podium-place:nth-child(1){animation-delay:.15s}
+    .podium-place:nth-child(2){animation-delay:.4s}
+    .podium-block{border-radius:14px 14px 0 0;padding:16px 10px 20px;border:1px solid var(--line)}
+    .podium-place.first .podium-block{background:linear-gradient(180deg,#3d2e12,#2a2410);border-color:#c9a227;min-height:130px}
+    .podium-place.second .podium-block{background:linear-gradient(180deg,#2a3142,#1a2030);border-color:#8a9bb5;min-height:90px}
+    .podium-medal{font-size:36px;display:block;margin-bottom:6px}
+    .podium-name{font-weight:800;font-size:15px;overflow-wrap:anywhere}
+    .podium-pts{font-size:22px;font-weight:900;margin-top:6px}
+    .podium-place.first .podium-pts{color:#ffd166}
+    .podium-place.second .podium-pts{color:#aab6d0}
+    .result-title{font-size:clamp(22px,6vw,32px);font-weight:900;margin:8px 0 4px;opacity:0;transform:scale(.8)}
+    .result-title.show{animation:titlePop .6s .1s cubic-bezier(.2,1.3,.3,1) forwards}
+    .result-sub{color:var(--muted);opacity:0}
+    .result-sub.show{animation:fadeIn .5s .5s forwards}
+    @keyframes riseUp{to{opacity:1;transform:translateY(0)}}
+    @keyframes titlePop{to{opacity:1;transform:scale(1)}}
+    @keyframes fadeIn{to{opacity:1}}
+
+    @media(max-width:520px){.card{padding:16px}.row{grid-template-columns:1fr}.question{font-size:19px}.podium{gap:8px}}
   </style>
 </head>
 <body>
@@ -55,7 +103,7 @@
   </section>
 
   <section id="game" class="card hidden">
-    <div class="row"><span id="roundLabel" class="pill">Questão 1/100</span><span id="categoryLabel" class="pill">INGLÊS</span></div>
+    <div class="row"><span id="roundLabel" class="pill">Questão 1/10</span><span id="categoryLabel" class="pill">INGLÊS</span></div>
     <div class="timer-text" id="timerText">03:00</div>
     <div class="timer-bar"><span id="timerBar"></span></div>
     <div class="bar"><span id="progress"></span></div>
@@ -66,10 +114,18 @@
   </section>
 
   <section id="result" class="card hidden center">
-    <div style="font-size:48px">🏆</div><h2>Fim de jogo!</h2><div id="winnerText" class="question"></div><div id="finalPlayers" class="players"></div>
+    <div id="resultTitle" class="result-title">Fim de jogo!</div>
+    <div id="resultSub" class="result-sub">Veja o pódio</div>
+    <div id="podium" class="podium"></div>
+    <div id="winnerText" class="question" style="margin-top:8px"></div>
     <button id="backBtn">Voltar ao início</button>
   </section>
-  <footer>Quiz Battle · Feito para jogar com amigos · 100 questões · 3 min por questão</footer>
+  <footer>Quiz Battle · Feito para jogar com amigos · 10 questões por rodada · 3 min por questão</footer>
+</div>
+
+<!-- Overlay CERTO / ERROU -->
+<div id="feedbackOverlay" class="feedback-overlay" aria-hidden="true">
+  <div class="burst" id="feedbackText">CERTO</div>
 </div>
 
 <!-- Firebase: use o SDK compat para manter o projeto em um único HTML. -->
@@ -92,6 +148,7 @@ const firebaseConfig = {
 };
 
 const QUESTION_TIME = 180; // 3 minutos em segundos
+const QUESTIONS_PER_ROUND = 10;
 
 const QUESTIONS = [
   // ===== TAG QUESTIONS (INGLÊS) =====
@@ -269,13 +326,75 @@ const $ = id => document.getElementById(id);
 let auth, db, uid, roomRef, roomCode, roomData, unsubscribe = null, isHost = false, busy = false;
 let timerInterval = null, localQuestionIdx = -1;
 
+const LAST_USED_KEY = "quiz_battle_last_used";
+
+function getLastUsedIds(){
+  try{
+    const raw = localStorage.getItem(LAST_USED_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+
+function saveLastUsedIds(ids){
+  try{ localStorage.setItem(LAST_USED_KEY, JSON.stringify(ids)); }catch(e){}
+}
+
+// Sorteia 10 questões evitando as da rodada anterior.
+// Só repete quando não tem mais pergunta nova disponível.
+function pickQuestionsForRound(){
+  const lastUsed = new Set(getLastUsedIds());
+  const pool = QUESTIONS.map((q,i)=>({...q, _id:i}));
+
+  // primeiro tenta só as que não foram usadas na última rodada
+  let available = pool.filter(q => !lastUsed.has(q._id));
+  if(available.length < QUESTIONS_PER_ROUND){
+    // não tem o bastante → libera todas de novo
+    available = pool.slice();
+  }
+
+  // embaralha
+  for(let i=available.length-1; i>0; i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [available[i], available[j]] = [available[j], available[i]];
+  }
+
+  const selected = available.slice(0, QUESTIONS_PER_ROUND);
+  // remove o _id interno antes de salvar no Firebase
+  const clean = selected.map(({_id, ...rest}) => rest);
+  const usedIds = selected.map(q => q._id);
+  saveLastUsedIds(usedIds);
+  return clean;
+}
+
+function currentQuestions(){
+  // usa as questões sorteadas da sala; fallback pro array global se não tiver
+  return (roomData && Array.isArray(roomData.selectedQuestions) && roomData.selectedQuestions.length)
+    ? roomData.selectedQuestions
+    : QUESTIONS;
+}
+
 function show(id){["setup","lobby","game","result"].forEach(x=>$(x).classList.toggle("hidden",x!==id));}
 function msg(t, cls=""){ $("setupMsg").textContent=t; $("setupMsg").className="notice small "+cls; }
 function cleanName(){return $("playerName").value.trim().slice(0,18)||"Jogador";}
 function makeCode(){return Math.random().toString(36).slice(2,8).toUpperCase();}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function playersOf(data){return Object.entries(data?.players||{}).map(([id,p])=>({id,...p}));}
-function playerCards(data,target){const ps=playersOf(data);$(target).innerHTML=ps.map(p=>`<div class="player"><strong>${escapeHtml(p.name)}</strong><div class="score">${p.score||0} pts</div><span class="small muted">${p.id===uid?"Você":(p.ready?"Conectado":"Na sala")}</span></div>`).join("");}
+function playerCards(data,target,hideScores=false){
+  const ps=playersOf(data);
+  $(target).innerHTML=ps.map(p=>`<div class="player"><strong>${escapeHtml(p.name)}</strong><div class="score${hideScores?" hidden-score":""}">${p.score||0} pts</div><span class="small muted">${p.id===uid?"Você":(p.ready?"Conectado":"Na sala")}</span></div>`).join("");
+}
+
+function showFeedback(correct){
+  const ov=$("feedbackOverlay");
+  const tx=$("feedbackText");
+  ov.classList.remove("correct","wrong","show");
+  void ov.offsetWidth; // force reflow
+  ov.classList.add(correct?"correct":"wrong");
+  tx.textContent=correct?"CERTO!":"ERROU!";
+  ov.classList.add("show");
+  clearTimeout(showFeedback._t);
+  showFeedback._t=setTimeout(()=>ov.classList.remove("show"),800);
+}
 function validConfig(){return firebaseConfig.apiKey!=="COLOQUE_SUA_API_KEY" && firebaseConfig.projectId!=="SEU-PROJETO";}
 
 function formatTime(sec){
@@ -313,17 +432,16 @@ async function forceAdvanceOnTimeout(){
   if(Object.keys(answers).length>=2)return; // já vai avançar pelo fluxo normal
   advancing=true;
   try{
-    // marca quem não respondeu como errado (0 ponto)
     const updates={};
-    // pontua só os que acertaram
     for(const [pid,a] of Object.entries(answers)){
       if(a.correct) updates[`players/${pid}/score`]=(roomData.players?.[pid]?.score||0)+10;
     }
     if(Object.keys(updates).length) await roomRef.update(updates);
     await new Promise(r=>setTimeout(r,800));
     const fresh=(await roomRef.once("value")).val();
+    const total = (fresh.selectedQuestions && fresh.selectedQuestions.length) || QUESTIONS_PER_ROUND;
     if(fresh.status==="playing"&&fresh.current===idx){
-      if(idx+1>=QUESTIONS.length) await roomRef.update({status:"finished"});
+      if(idx+1>=total) await roomRef.update({status:"finished"});
       else await roomRef.update({current:idx+1, questionStartedAt:Date.now(), answers:{...(fresh.answers||{}), [idx]: answers}});
     }
   }finally{advancing=false;}
@@ -399,18 +517,22 @@ function renderRoom(){
 
 async function startGame(){
   if(!isHost||playersOf(roomData).length!==2)return;
+  const selected = pickQuestionsForRound();
   await roomRef.update({
     status:"playing",
     current:0,
     answers:{},
+    selectedQuestions: selected,
     questionStartedAt:Date.now(),
     startedAt:Date.now()
   });
 }
 
 function renderGame(){
+  const qs = currentQuestions();
+  const total = qs.length;
   const idx=roomData.current||0;
-  if(idx>=QUESTIONS.length){renderResults();return;}
+  if(idx>=total){renderResults();return;}
 
   // reinicia timer local se mudou de questão
   if(localQuestionIdx!==idx){
@@ -418,16 +540,16 @@ function renderGame(){
     startLocalTimer(roomData.questionStartedAt||Date.now());
   }
 
-  const q=QUESTIONS[idx];
+  const q=qs[idx];
   const myAnswer=roomData.answers?.[idx]?.[uid];
   const answers=roomData.answers?.[idx]||{};
   const otherId=Object.keys(roomData.players||{}).find(id=>id!==uid);
   const otherAnswered=otherId&&answers[otherId]!==undefined;
   const count=Object.keys(answers).length;
 
-  $("roundLabel").textContent=`Questão ${idx+1}/${QUESTIONS.length}`;
+  $("roundLabel").textContent=`Questão ${idx+1}/${total}`;
   $("categoryLabel").textContent=q.c;
-  $("progress").style.width=((idx)/QUESTIONS.length*100)+"%";
+  $("progress").style.width=((idx)/total*100)+"%";
   $("questionText").textContent=q.q;
 
   $("answerButtons").innerHTML=q.a.map((a,i)=>{
@@ -463,18 +585,24 @@ function renderGame(){
     }
   }
   $("answerStatus").innerHTML=statusHtml;
-  playerCards(roomData,"gamePlayers");
+  // últimas 3 questões: esconde placar (suspense)
+  const remaining = total - idx;
+  const hideScores = remaining <= 3;
+  playerCards(roomData,"gamePlayers", hideScores);
 }
 
 async function sendAnswer(choice){
   if(busy||!roomData||roomData.answers?.[roomData.current]?.[uid]!==undefined)return;
   busy=true;
   const idx=roomData.current;
-  const q=QUESTIONS[idx];
+  const qs = currentQuestions();
+  const q = qs[idx];
+  const isCorrect = choice === q.k;
+  showFeedback(isCorrect);
   try{
     await roomRef.child(`answers/${idx}/${uid}`).set({
       choice,
-      correct:choice===q.k,
+      correct:isCorrect,
       at:Date.now()
     });
   }finally{busy=false;}
@@ -495,8 +623,9 @@ async function maybeAdvance(){
     if(Object.keys(updates).length) await roomRef.update(updates);
     await new Promise(r=>setTimeout(r,1200));
     const fresh=(await roomRef.once("value")).val();
+    const total = (fresh.selectedQuestions && fresh.selectedQuestions.length) || QUESTIONS_PER_ROUND;
     if(fresh.status==="playing"&&fresh.current===idx&&Object.keys(fresh.answers?.[idx]||{}).length===2){
-      if(idx+1>=QUESTIONS.length) await roomRef.update({status:"finished"});
+      if(idx+1>=total) await roomRef.update({status:"finished"});
       else await roomRef.update({current:idx+1, questionStartedAt:Date.now()});
     }
   }finally{advancing=false;}
@@ -507,8 +636,41 @@ function renderResults(){
   show("result");
   $("progress").style.width="100%";
   const ps=playersOf(roomData).sort((a,b)=>(b.score||0)-(a.score||0));
-  $("winnerText").textContent=ps[0]?.score===ps[1]?.score?"Empate! Mandaram bem demais.":`🏆 ${ps[0]?.name} venceu!`;
-  $("finalPlayers").innerHTML=ps.map((p,i)=>`<div class="player"><strong>${i===0?"🥇 ":"🥈 "}${escapeHtml(p.name)}</strong><div class="score">${p.score||0} pts</div></div>`).join("");
+  const tie = ps.length>=2 && (ps[0]?.score||0)===(ps[1]?.score||0);
+
+  const title = $("resultTitle");
+  const sub = $("resultSub");
+  title.classList.remove("show");
+  sub.classList.remove("show");
+  title.textContent = tie ? "EMPATE!" : "TEMOS UM CAMPEÃO!";
+  sub.textContent = tie ? "Os dois mandaram bem demais" : "Confira o pódio";
+
+  // pódio: 1º e 2º
+  const podium = $("podium");
+  podium.innerHTML = "";
+  if(ps[0]){
+    const first = document.createElement("div");
+    first.className = "podium-place first";
+    first.innerHTML = `<div class="podium-block"><span class="podium-medal">🥇</span><div class="podium-name">${escapeHtml(ps[0].name)}</div><div class="podium-pts">${ps[0].score||0} pts</div></div>`;
+    podium.appendChild(first);
+  }
+  if(ps[1]){
+    const second = document.createElement("div");
+    second.className = "podium-place second";
+    second.innerHTML = `<div class="podium-block"><span class="podium-medal">🥈</span><div class="podium-name">${escapeHtml(ps[1].name)}</div><div class="podium-pts">${ps[1].score||0} pts</div></div>`;
+    podium.appendChild(second);
+  }
+
+  $("winnerText").textContent = tie
+    ? "Ninguém perdeu. Vocês empataram!"
+    : `🏆 ${ps[0]?.name} venceu · ${ps[1]?.name} ficou em 2º`;
+
+  // animações sequenciais
+  requestAnimationFrame(()=>{
+    title.classList.add("show");
+    sub.classList.add("show");
+    [...podium.querySelectorAll(".podium-place")].forEach(el=>el.classList.add("show"));
+  });
 }
 
 async function leaveRoom(){
