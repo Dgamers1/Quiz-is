@@ -38,10 +38,16 @@
     .side-body ul{padding-left:18px;margin:8px 0}
     .side-body li{margin:6px 0}
     .side-body b{color:#c5d4f5}
-    .topic-list{display:grid;gap:8px;margin-bottom:14px}
-    .topic-btn{margin:0;text-align:left;background:#1a243a;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;font-weight:600;cursor:pointer}
-    .topic-btn.active{border-color:var(--blue);background:#1a2d52;color:#9fc9ff}
-    .topic-panel{margin-top:8px;padding-top:4px;border-top:1px solid var(--line)}
+    .rev-item{background:#1a243a;border:1px solid var(--line);border-radius:12px;margin:0 0 10px;overflow:hidden}
+    .rev-item summary{list-style:none;cursor:pointer;padding:14px 16px;font-weight:700;color:var(--text);font-size:14px;user-select:none}
+    .rev-item summary::-webkit-details-marker{display:none}
+    .rev-item summary::after{content:"▾";float:right;color:var(--muted);transition:transform .2s}
+    .rev-item[open] summary::after{transform:rotate(180deg)}
+    .rev-item[open] summary{border-bottom:1px solid var(--line);color:#9fc9ff}
+    .rev-content{padding:12px 16px 16px;font-size:14px;line-height:1.55;color:var(--muted)}
+    .rev-content p{margin:0 0 10px}
+    .rev-content ul{margin:8px 0;padding-left:18px}
+    .rev-content li{margin:6px 0}
     .answers button.selected{border-color:var(--blue);background:#263d66}
     .answers button:focus{outline:none}
     .answers button:focus-visible{outline:2px solid var(--blue)}
@@ -112,69 +118,73 @@
       <button type="button" id="closeMenuBtn" class="menu-btn">✕</button>
     </div>
     <div class="side-body">
-      <p class="small muted" style="margin-top:0">Escolha um assunto:</p>
-      <div class="topic-list" id="topicList">
-        <button type="button" class="topic-btn" data-topic="tags">🇬🇧 Tag Questions (visão geral)</button>
-        <button type="button" class="topic-btn" data-topic="do">🇬🇧 DO / DOES / DID</button>
-        <button type="button" class="topic-btn" data-topic="aux">🇬🇧 Auxiliares e exceções</button>
-        <button type="button" class="topic-btn" data-topic="crase">🇧🇷 Crase</button>
-        <button type="button" class="topic-btn" data-topic="mod">🇧🇷 Modernismo (1ª fase)</button>
-      </div>
+      <p class="small muted" style="margin-top:0">Toque em um assunto para abrir:</p>
 
-      <div id="topic-tags" class="topic-panel hidden">
-        <h3>Tag Questions</h3>
-        <p>Servem para <b>confirmar</b> algo. A tag usa o <b>mesmo auxiliar</b> da frase e inverte: se a frase é afirmativa, a tag é negativa (e vice-versa).</p>
-        <p>Ex.: She is your sister, <b>isn't she?</b></p>
-        <p>Ex.: You don't like coffee, <b>do you?</b></p>
-      </div>
+      <details class="rev-item" open>
+        <summary>🇬🇧 Tag Questions — visão geral</summary>
+        <div class="rev-content">
+          <p>Tag questions <b>confirmam</b> o que foi dito. A tag usa o <b>mesmo auxiliar</b> da frase e <b>inverte</b> afirmativo/negativo.</p>
+          <p>✅ Afirmativa → tag negativa<br>She is a teacher, <b>isn't she?</b></p>
+          <p>✅ Negativa → tag positiva<br>You don't like coffee, <b>do you?</b></p>
+          <p>Regra de ouro: ache o auxiliar (ou use do/does/did) e inverta.</p>
+        </div>
+      </details>
 
-      <div id="topic-do" class="topic-panel hidden">
-        <h3>DO / DOES / DID</h3>
-        <ul>
-          <li><b>do</b> — presente com I/you/we/they → You play soccer, <b>don't you?</b></li>
-          <li><b>does</b> — presente com he/she/it → He likes tea, <b>doesn't he?</b></li>
-          <li><b>did</b> — passado simples (todos) → They went home, <b>didn't they?</b></li>
-        </ul>
-        <p>Frase negativa → tag positiva: She <b>doesn't</b> drive, <b>does she?</b></p>
-        <p>No past simple o verbo principal vira base na tag: went → <b>didn't they?</b></p>
-      </div>
+      <details class="rev-item">
+        <summary>🇬🇧 DO / DOES / DID</summary>
+        <div class="rev-content">
+          <p>Quando a frase <b>não tem</b> auxiliar visível (be/have/will/can...), a tag usa:</p>
+          <ul>
+            <li><b>do</b> — presente, I/you/we/they<br>You play soccer, <b>don't you?</b></li>
+            <li><b>does</b> — presente, he/she/it<br>She works here, <b>doesn't she?</b></li>
+            <li><b>did</b> — passado simples (todos)<br>They went home, <b>didn't they?</b></li>
+          </ul>
+          <p>No passado o verbo “volta” à base: <b>went</b> → didn't they?</p>
+          <p>Negativa: He <b>doesn't</b> drive, <b>does he?</b></p>
+        </div>
+      </details>
 
-      <div id="topic-aux" class="topic-panel hidden">
-        <h3>Auxiliares e exceções</h3>
-        <p>Repetem na tag: <b>be</b> (am/is/are/was/were), <b>have/has/had</b>, <b>will</b>, <b>can/could</b>, <b>should</b>, <b>must</b>...</p>
-        <p><b>Exceções</b></p>
-        <ul>
-          <li><b>I am</b> → <b>aren't I?</b></li>
-          <li><b>Let's</b> → <b>shall we?</b></li>
-          <li>Imperativo → <b>will you?</b></li>
-          <li>Nobody / everybody → pronome <b>they</b> na tag</li>
-          <li>There is/are → tag com <b>there</b></li>
-        </ul>
-      </div>
+      <details class="rev-item">
+        <summary>🇬🇧 Auxiliares e exceções</summary>
+        <div class="rev-content">
+          <p>Se já existe auxiliar, <b>repita</b> na tag: be, have/has/had, will, can, could, should, must...</p>
+          <p><b>Exceções de prova:</b></p>
+          <ul>
+            <li><b>I am</b> → <b>aren't I?</b></li>
+            <li><b>Let's</b> → <b>shall we?</b></li>
+            <li>Imperativo → <b>will you?</b></li>
+            <li>Nobody / everybody → <b>they</b></li>
+            <li>There is/are → tag com <b>there</b></li>
+          </ul>
+        </div>
+      </details>
 
-      <div id="topic-crase" class="topic-panel hidden">
-        <h3>Crase</h3>
-        <p>Crase = <b>a + a</b> (preposição + artigo/demonstrativo) → <b>à</b>.</p>
-        <ul>
-          <li>Só antes de palavra <b>feminina</b> que admite artigo.</li>
-          <li>Teste: “vou a X” + “venho <b>da</b> X” → use <b>à</b>.</li>
-          <li>“venho <b>de</b> X” → sem crase.</li>
-          <li><b>Sem crase:</b> verbo, masculino, pronomes pessoais (ela, mim...), artigo indefinido, muitas cidades.</li>
-          <li><b>Facultativo:</b> possessivo feminino (à minha / a minha) e nomes próprios femininos.</li>
-        </ul>
-      </div>
+      <details class="rev-item">
+        <summary>🇧🇷 Crase</summary>
+        <div class="rev-content">
+          <p>Crase = <b>a + a</b> → <b>à</b> (preposição + artigo/demonstrativo).</p>
+          <ul>
+            <li>Antes de feminino determinado: Fui <b>à</b> escola.</li>
+            <li>àquela / àquele / àquilo</li>
+            <li>Locuções: <b>à noite</b>, <b>às vezes</b>, <b>à procura de</b></li>
+          </ul>
+          <p><b>Teste:</b> venho <b>da</b> Bahia → vou <b>à</b> Bahia. Venho <b>de</b> SP → vou <b>a</b> SP.</p>
+          <p><b>Sem crase:</b> verbo, masculino, ela/mim, uma, muitas cidades.</p>
+          <p><b>Facultativo:</b> à minha / a minha; nomes próprios femininos.</p>
+        </div>
+      </details>
 
-      <div id="topic-mod" class="topic-panel hidden">
-        <h3>Modernismo — 1ª fase</h3>
-        <p><b>Fase heroica/primitivista</b> (≈ 1922–1930).</p>
-        <ul>
-          <li><b>Semana de Arte Moderna</b> — fev. 1922, Teatro Municipal de SP.</li>
-          <li>Autores: <b>Mário de Andrade</b>, <b>Oswald de Andrade</b>, <b>Manuel Bandeira</b>.</li>
-          <li>Traços: ruptura, verso livre, humor, ironia, linguagem coloquial, nacionalismo crítico.</li>
-          <li><b>Pau-Brasil</b> (1924) e <b>Antropofagia</b> (1928) — Oswald.</li>
-          <li>Obras: <i>Pauliceia Desvairada</i>, <i>Macunaíma</i>, <i>João Miramar</i>, <i>Libertinagem</i>.</li>
-        </ul>
-      </div>
+      <details class="rev-item">
+        <summary>🇧🇷 Modernismo — 1ª fase</summary>
+        <div class="rev-content">
+          <p><b>Fase heroica/primitivista</b> (≈ 1922–1930).</p>
+          <p><b>Marco:</b> Semana de Arte Moderna, fev. <b>1922</b>, Teatro Municipal de SP.</p>
+          <p><b>Autores:</b> Mário de Andrade, Oswald de Andrade, Manuel Bandeira.</p>
+          <p><b>Traços:</b> ruptura, verso livre, humor, coloquialismo, nacionalismo crítico.</p>
+          <p><b>Oswald:</b> Pau-Brasil (1924) e Antropofagia (1928).</p>
+          <p><b>Obras:</b> Pauliceia Desvairada, Macunaíma, João Miramar, Libertinagem.</p>
+        </div>
+      </details>
     </div>
   </aside>
 
